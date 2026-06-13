@@ -34,6 +34,10 @@
     let isMouseOverGlobe = false;
     let borderOpacity = 0.04; // Smooth transition state for borders
 
+    // Country Detail Map Zoom State
+    let countryZoomTransform = d3.zoomIdentity;
+    let countryZoom = null;
+
     // --- Name Normalization ---
     function normalizeCountryName(country) {
         if (!country) return '';
@@ -402,6 +406,12 @@
         document.getElementById('country-map-container').style.display = 'block';
         document.getElementById('places-list-header').style.display = 'block';
 
+        // Reset D3 zoom state to identity before rendering the new country
+        const mapCanvas = document.getElementById('country-map-canvas');
+        if (mapCanvas && countryZoom) {
+            d3.select(mapCanvas).call(countryZoom.transform, d3.zoomIdentity);
+        }
+
         // Show detail column and adjust layout
         const layout = document.querySelector('.travel-layout');
         if (layout) {
@@ -449,40 +459,65 @@
             .fitSize([mapWidth - 40, mapHeight - 40], countryFeature);
         const mPath = d3.geoPath(mProjection, mctx);
 
-        // Draw country shape
+        // Draw country shape (zoomed context)
+        mctx.save();
+        mctx.translate(countryZoomTransform.x, countryZoomTransform.y);
+        mctx.scale(countryZoomTransform.k, countryZoomTransform.k);
+        
         mctx.beginPath();
         mPath(countryFeature);
         mctx.fillStyle = 'rgba(100, 255, 218, 0.08)';
         mctx.fill();
         mctx.strokeStyle = 'rgba(100, 255, 218, 0.4)';
-        mctx.lineWidth = 1.5;
+        mctx.lineWidth = 1.5 / countryZoomTransform.k; // Constant border thickness on screen
         mctx.stroke();
+        
+        mctx.restore();
 
-        // Plot cities/markers
+        // Plot cities/markers as a density heatmap
         for (const place of countryPlaces) {
             const coords = mProjection([place.lng, place.lat]);
             if (!coords) continue;
-            const [px, py] = coords;
+            
+            // Project coordinate, then apply D3 zoom transformation manually
+            const [x, y] = coords;
+            const px = x * countryZoomTransform.k + countryZoomTransform.x;
+            const py = y * countryZoomTransform.k + countryZoomTransform.y;
 
-            // Outer glow halo
+            // Avoid drawing markers way out of canvas bounds to optimize
+            if (px < -50 || px > mapWidth + 50 || py < -50 || py > mapHeight + 50) continue;
+
+            // Heatmap density glow (larger, semi-transparent overlapping circles)
+            const glowRadius = 24;
+            const grad = mctx.createRadialGradient(px, py, 0, px, py, glowRadius);
+            grad.addColorStop(0, 'rgba(255, 169, 77, 0.45)');
+            grad.addColorStop(0.3, 'rgba(255, 169, 77, 0.15)');
+            grad.addColorStop(1, 'transparent');
+            
             mctx.beginPath();
-            mctx.arc(px, py, 8, 0, Math.PI * 2);
-            mctx.fillStyle = 'rgba(255, 169, 77, 0.25)';
+            mctx.arc(px, py, glowRadius, 0, Math.PI * 2);
+            mctx.fillStyle = grad;
             mctx.fill();
 
             // Core dot
             mctx.beginPath();
-            mctx.arc(px, py, 3.5, 0, Math.PI * 2);
+            mctx.arc(px, py, 3, 0, Math.PI * 2);
             mctx.fillStyle = 'rgba(255, 169, 77, 0.9)';
             mctx.fill();
 
-            // Text label
-            mctx.font = '10px "Space Grotesk", sans-serif';
-            mctx.fillStyle = 'rgba(232, 234, 246, 0.85)';
-            mctx.textAlign = 'center';
-            mctx.textBaseline = 'top';
+            // Text label: show place name only when zoomed in (k >= 1.5)
+            if (countryZoomTransform.k >= 1.5) {
+                mctx.font = '10px "Space Grotesk", sans-serif';
+                mctx.fillStyle = 'rgba(232, 234, 246, 0.85)';
+                mctx.textAlign = 'center';
+                mctx.textBaseline = 'top';
 
-            mctx.fillText(place.name, px, py + 6);
+                // Shadow/background glow for the text for readability
+                mctx.shadowColor = 'rgba(8, 12, 28, 1)';
+                mctx.shadowBlur = 4;
+                mctx.fillText(place.name, px, py + 6);
+                mctx.shadowBlur = 0; // Reset shadow
+            }
         }
     }
 
@@ -675,10 +710,28 @@
         });
     });
 
+    function initCountryMapZoom() {
+        const mapCanvas = document.getElementById('country-map-canvas');
+        if (!mapCanvas) return;
+
+        countryZoom = d3.zoom()
+            .scaleExtent([1, 12]) // Zoom limits
+            .on('zoom', (event) => {
+                countryZoomTransform = event.transform;
+                if (selectedCountry) {
+                    const countryPlaces = places.filter(p => normalizeCountryName(p.country) === normalizeCountryName(selectedCountry.properties.name));
+                    renderCountryMap(selectedCountry, countryPlaces);
+                }
+            });
+
+        d3.select(mapCanvas).call(countryZoom);
+    }
+
     // --- Init ---
     async function init() {
         console.log("Initializing globe: sizing canvas...");
         resize();
+        initCountryMapZoom();
         console.log("Loading world map and places CSV...");
         await Promise.all([loadWorld(), loadPlaces()]);
         console.log("Loaded " + places.length + " places. Starting draw loop...");
