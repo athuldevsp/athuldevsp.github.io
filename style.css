@@ -1322,18 +1322,47 @@ img { max-width: 100%; height: auto; }
 /* --- Travel split layout --- */
 .travel-layout {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
+    grid-template-columns: 1fr;
     gap: 2rem;
     align-items: start;
     margin-bottom: 3rem;
+    transition: grid-template-columns 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.travel-layout.has-selection {
+    grid-template-columns: 1.2fr 0.8fr;
 }
 
 .globe-column {
     width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+    transition: max-width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.travel-layout.has-selection .globe-column {
+    max-width: none;
 }
 
 .detail-column {
     width: 100%;
+    display: none;
+}
+
+.travel-layout.has-selection .detail-column {
+    display: block;
+    animation: slideInUp 0.5s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .detail-card {

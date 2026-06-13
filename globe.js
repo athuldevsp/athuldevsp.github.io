@@ -26,10 +26,13 @@
     let initialTouchDistance = null;
     let initialZoomFactor = 1.0;
 
-    // Click tracking state
+    // Hover & Click tracking state
     let clickStart = { x: 0, y: 0 };
     let clickTime = 0;
     let selectedCountry = null;
+    let hoveredCountry = null;
+    let isMouseOverGlobe = false;
+    let borderOpacity = 0.04; // Smooth transition state for borders
 
     // --- Name Normalization ---
     function normalizeCountryName(country) {
@@ -229,11 +232,8 @@
         // Draw default land first
         ctx.beginPath();
         path(worldData.land);
-        ctx.fillStyle = 'rgba(100, 255, 218, 0.04)';
+        ctx.fillStyle = 'rgba(100, 255, 218, 0.03)';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.12)';
-        ctx.lineWidth = 0.5;
-        ctx.stroke();
 
         // Highlight visited countries
         for (const feature of worldData.countries.features) {
@@ -244,26 +244,41 @@
                 ctx.beginPath();
                 path(feature);
 
-                // Highlight selected country differently
+                // Highlight selected and hovered states differently
                 if (selectedCountry && selectedCountry.id === feature.id) {
-                    ctx.fillStyle = 'rgba(255, 169, 77, 0.25)';
+                    ctx.fillStyle = 'rgba(255, 169, 77, 0.3)'; // Selected country (warm orange)
+                } else if (hoveredCountry && hoveredCountry.id === feature.id) {
+                    ctx.fillStyle = 'rgba(100, 255, 218, 0.25)'; // Hovered country (glowing green)
                 } else {
-                    ctx.fillStyle = 'rgba(100, 255, 218, 0.18)';
+                    ctx.fillStyle = 'rgba(100, 255, 218, 0.12)'; // Default visited country (soft green)
                 }
                 ctx.fill();
 
-                ctx.strokeStyle = 'rgba(100, 255, 218, 0.35)';
-                ctx.lineWidth = 0.8;
+                // Glow outline on hover / selection
+                if (hoveredCountry && hoveredCountry.id === feature.id) {
+                    ctx.strokeStyle = 'rgba(100, 255, 218, 0.8)';
+                    ctx.lineWidth = 1.2;
+                } else if (selectedCountry && selectedCountry.id === feature.id) {
+                    ctx.strokeStyle = 'rgba(255, 169, 77, 0.8)';
+                    ctx.lineWidth = 1.0;
+                } else {
+                    ctx.strokeStyle = 'rgba(100, 255, 218, 0.25)';
+                    ctx.lineWidth = 0.6;
+                }
                 ctx.stroke();
             }
         }
     }
 
     function drawBorders() {
+        // Smoothly fade borders in and out based on hover state
+        const targetOpacity = isMouseOverGlobe ? 0.35 : 0.04;
+        borderOpacity += (targetOpacity - borderOpacity) * 0.15;
+
         ctx.beginPath();
         path(worldData.borders);
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.08)';
-        ctx.lineWidth = 0.3;
+        ctx.strokeStyle = `rgba(100, 255, 218, ${borderOpacity})`;
+        ctx.lineWidth = 0.5;
         ctx.stroke();
     }
 
@@ -271,7 +286,7 @@
         const graticule = d3.geoGraticule().step([20, 20])();
         ctx.beginPath();
         path(graticule);
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.03)';
+        ctx.strokeStyle = 'rgba(100, 255, 218, 0.02)';
         ctx.lineWidth = 0.4;
         ctx.stroke();
     }
@@ -336,7 +351,11 @@
                 const hasVisited = places.some(p => normalizeCountryName(p.country) === countryName);
                 if (hasVisited) {
                     selectCountry(clickedFeature);
+                } else {
+                    deselectCountry();
                 }
+            } else {
+                deselectCountry();
             }
         }
     }
@@ -352,16 +371,30 @@
 
         // Update UI Panel elements
         document.getElementById('selected-country-name').innerText = countryName;
-        document.getElementById('selected-country-stats').innerText = `You have explored ${countryPlaces.length} cities/regions inside ${countryName}.`;
+        document.getElementById('selected-country-stats').innerText = `I have explored ${countryPlaces.length} ${countryPlaces.length === 1 ? 'place' : 'places'} inside ${countryName}.`;
 
         document.getElementById('country-map-container').style.display = 'block';
         document.getElementById('places-list-header').style.display = 'block';
+
+        // Show detail column and adjust layout
+        const layout = document.querySelector('.travel-layout');
+        if (layout) {
+            layout.classList.add('has-selection');
+        }
 
         // Render 2D Mercator projection country detail map
         renderCountryMap(countryFeature, countryPlaces);
 
         // Render places cards inside detail card
         renderCountryPlacesList(countryPlaces);
+    }
+
+    function deselectCountry() {
+        selectedCountry = null;
+        const layout = document.querySelector('.travel-layout');
+        if (layout) {
+            layout.classList.remove('has-selection');
+        }
     }
 
     function renderCountryMap(countryFeature, countryPlaces) {
@@ -418,7 +451,6 @@
             mctx.textAlign = 'center';
             mctx.textBaseline = 'top';
 
-            // Check boundaries to avoid labels overlapping dots
             mctx.fillText(place.name, px, py + 6);
         }
     }
@@ -434,7 +466,7 @@
         `).join('');
     }
 
-    // --- Drag & Zoom Mouse Event Bindings ---
+    // --- Mouse & Touch Event Bindings ---
     canvas.addEventListener('mousedown', (e) => {
         isDragging = true;
         clickStart = { x: e.clientX, y: e.clientY };
@@ -464,6 +496,74 @@
         const dt = Date.now() - clickTime;
         if (Math.sqrt(dx * dx + dy * dy) < 5 && dt < 300) {
             handleGlobeClick(e);
+        }
+    });
+
+    // Hover detection
+    canvas.addEventListener('mouseenter', () => {
+        isMouseOverGlobe = true;
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+        isMouseOverGlobe = false;
+        hoveredCountry = null;
+        canvas.style.cursor = 'grab';
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (isDragging) return; // Do not calculate hover during drag
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const cx = width / 2;
+        const cy = height / 2;
+        const r = projection.scale();
+        const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+
+        if (dist > r) {
+            if (hoveredCountry) {
+                hoveredCountry = null;
+                canvas.style.cursor = 'grab';
+            }
+            return;
+        }
+
+        const coords = projection.invert([x, y]);
+        if (!coords) return;
+
+        const d = d3.geoDistance(coords, projection.invert([width / 2, height / 2]));
+        if (d > Math.PI / 2) {
+            if (hoveredCountry) {
+                hoveredCountry = null;
+                canvas.style.cursor = 'grab';
+            }
+            return;
+        }
+
+        if (worldData && worldData.countries) {
+            const country = worldData.countries.features.find(f => d3.geoContains(f, coords));
+            if (country) {
+                const countryName = normalizeCountryName(country.properties.name);
+                const hasVisited = places.some(p => normalizeCountryName(p.country) === countryName);
+                if (hasVisited) {
+                    if (!hoveredCountry || hoveredCountry.id !== country.id) {
+                        hoveredCountry = country;
+                        canvas.style.cursor = 'pointer';
+                    }
+                } else {
+                    if (hoveredCountry) {
+                        hoveredCountry = null;
+                        canvas.style.cursor = 'grab';
+                    }
+                }
+            } else {
+                if (hoveredCountry) {
+                    hoveredCountry = null;
+                    canvas.style.cursor = 'grab';
+                }
+            }
         }
     });
 
@@ -551,27 +651,18 @@
         console.log("Loading world map and places CSV...");
         await Promise.all([loadWorld(), loadPlaces()]);
         console.log("Loaded " + places.length + " places. Starting draw loop...");
-        
-        // Select India by default if present
-        if (worldData && worldData.countries) {
-            const defaultCountry = worldData.countries.features.find(f => f.properties.name === "India");
-            if (defaultCountry) {
-                selectCountry(defaultCountry);
-            }
-        }
-        
         draw(0);
     }
 
-    window.addEventListener('resize', () => {
-        cancelAnimationFrame(animFrame);
+    // Resize observer to handle container size changes dynamically (e.g. split layout transitions)
+    const resizeObserver = new ResizeObserver(() => {
         resize();
-        draw(0);
         if (selectedCountry) {
             const countryPlaces = places.filter(p => normalizeCountryName(p.country) === normalizeCountryName(selectedCountry.properties.name));
             renderCountryMap(selectedCountry, countryPlaces);
         }
     });
+    resizeObserver.observe(canvas.parentElement);
 
     init();
 })();
