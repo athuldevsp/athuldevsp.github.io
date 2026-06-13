@@ -380,12 +380,12 @@
             layout.classList.add('has-selection');
         }
 
-        // Wait one frame to let the layout paint, then resize and draw
-        requestAnimationFrame(() => {
+        // Delay slightly to let the CSS display block apply and compute layout width
+        setTimeout(() => {
             resize();
             renderCountryMap(countryFeature, countryPlaces);
             renderCountryPlacesList(countryPlaces);
-        });
+        }, 100);
     }
 
     function deselectCountry() {
@@ -394,9 +394,9 @@
         if (layout) {
             layout.classList.remove('has-selection');
         }
-        requestAnimationFrame(() => {
+        setTimeout(() => {
             resize();
-        });
+        }, 100);
     }
 
     function renderCountryMap(countryFeature, countryPlaces) {
@@ -406,16 +406,20 @@
         const mrect = mapCanvas.parentElement.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
         
-        mapCanvas.width = mrect.width * dpr;
-        mapCanvas.height = mrect.height * dpr;
+        // Ensure map dimensions are never zero or negative to prevent D3 projection crash
+        const mapWidth = Math.max(100, mrect.width || mapCanvas.parentElement.clientWidth || 300);
+        const mapHeight = Math.max(100, mrect.height || mapCanvas.parentElement.clientHeight || 250);
+        
+        mapCanvas.width = mapWidth * dpr;
+        mapCanvas.height = mapHeight * dpr;
         mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        mctx.clearRect(0, 0, mrect.width, mrect.height);
+        mctx.clearRect(0, 0, mapWidth, mapHeight);
 
         // Setup country fit Mercator projection
         const mProjection = d3.geoMercator()
-            .fitSize([mrect.width - 40, mrect.height - 40], countryFeature)
-            .translate([mrect.width / 2, mrect.height / 2]);
+            .fitSize([mapWidth - 40, mapHeight - 40], countryFeature)
+            .translate([mapWidth / 2, mapHeight / 2]);
         const mPath = d3.geoPath(mProjection, mctx);
 
         // Draw country shape
