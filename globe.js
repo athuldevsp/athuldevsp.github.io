@@ -79,9 +79,28 @@
         }
     }
 
+    let indiaSOI = null;
+
+    async function loadIndiaSOI() {
+        try {
+            const resp = await fetch('data/india-soi.geojson?v=' + Date.now());
+            if (resp.ok) {
+                const geojson = await resp.json();
+                if (geojson && geojson.features && geojson.features.length > 0) {
+                    indiaSOI = geojson.features[0];
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load official India boundaries:', err);
+        }
+    }
+
     // --- Load World TopoJSON ---
     async function loadWorld() {
         try {
+            // Load official India boundaries first
+            await loadIndiaSOI();
+
             const resp = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
             if (!resp.ok) throw new Error("Failed to download world atlas data");
             const topo = await resp.json();
@@ -90,6 +109,15 @@
                 countries: topojson.feature(topo, topo.objects.countries),
                 borders: topojson.mesh(topo, topo.objects.countries, (a, b) => a !== b)
             };
+
+            // Inject official India geometry if loaded successfully
+            if (indiaSOI && worldData.countries && worldData.countries.features) {
+                const indiaFeature = worldData.countries.features.find(f => normalizeCountryName(f.properties.name) === 'India');
+                if (indiaFeature) {
+                    indiaFeature.geometry = indiaSOI.geometry;
+                    console.log("Successfully replaced India's borders on the globe with the official Survey of India boundaries!");
+                }
+            }
         } catch (err) {
             console.error('Failed to load world data:', err);
         }
