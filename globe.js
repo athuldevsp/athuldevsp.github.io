@@ -12,6 +12,7 @@
     let width, height;
     let projection, path;
     let worldData = null;
+    let detailedWorldData = null; // Cache for high-resolution country borders (50m dataset)
     let places = [];
     let autoRotate = true;
     let isDragging = false;
@@ -224,6 +225,21 @@
         if (worldData) {
             drawLand();
             drawBorders();
+
+            // Mask out other countries' borders/lands inside India's official boundaries
+            if (indiaSOI) {
+                // Erase borders under India
+                ctx.beginPath();
+                path(indiaSOI);
+                ctx.fillStyle = 'rgba(8, 12, 28, 1.0)'; // globe background color
+                ctx.fill();
+
+                // Restore default land color on top of erased area
+                ctx.fillStyle = 'rgba(100, 255, 218, 0.03)';
+                ctx.fill();
+            }
+
+            drawVisitedCountries();
         }
         drawGraticule();
         drawCountryLabels();
@@ -264,6 +280,10 @@
         path(worldData.land);
         ctx.fillStyle = 'rgba(100, 255, 218, 0.03)';
         ctx.fill();
+    }
+
+    function drawVisitedCountries() {
+        if (!worldData) return;
 
         // Highlight visited countries
         for (const feature of worldData.countries.features) {
@@ -391,7 +411,7 @@
     }
 
     // --- Selected Country Operations ---
-    function selectCountry(countryFeature) {
+    async function selectCountry(countryFeature) {
         selectedCountry = countryFeature;
         const countryName = countryFeature.properties.name;
         const normName = normalizeCountryName(countryName);
@@ -418,10 +438,52 @@
             layout.classList.add('has-selection');
         }
 
+        // Load high-resolution boundaries for the detail map
+        let renderFeature = countryFeature;
+        if (normName === 'India') {
+            try {
+                const resp = await fetch('data/india-soi-fine.geojson?v=' + Date.now());
+                if (resp.ok) {
+                    const fineGeojson = await resp.json();
+                    if (fineGeojson && fineGeojson.features && fineGeojson.features.length > 0) {
+                        renderFeature = {
+                            ...countryFeature,
+                            geometry: fineGeojson.features[0].geometry
+                        };
+                        selectedCountry = renderFeature; // Update state so zooms use high-res
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load fine-resolution India boundaries:", err);
+            }
+        } else {
+            try {
+                if (!detailedWorldData) {
+                    const resp = await fetch('data/countries-50m.json?v=' + Date.now());
+                    if (resp.ok) {
+                        const topo = await resp.json();
+                        detailedWorldData = topojson.feature(topo, topo.objects.countries);
+                    }
+                }
+                if (detailedWorldData) {
+                    const fineFeature = detailedWorldData.features.find(f => normalizeCountryName(f.properties.name) === normName);
+                    if (fineFeature) {
+                        renderFeature = {
+                            ...countryFeature,
+                            geometry: fineFeature.geometry
+                        };
+                        selectedCountry = renderFeature; // Update state so zooms use high-res
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load high-resolution country boundaries:", err);
+            }
+        }
+
         // Delay slightly to let the CSS display block apply and compute layout width
         setTimeout(() => {
             resize();
-            renderCountryMap(countryFeature, countryPlaces);
+            renderCountryMap(renderFeature, countryPlaces);
             renderCountryPlacesList(countryPlaces);
         }, 100);
     }
