@@ -43,7 +43,7 @@ function renderProjects(projects) {
         const desc = project.description || 'No description provided.';
 
         return `
-        <div class="repo-card reveal-up" style="animation-delay: ${idx * 0.05}s">
+        <div class="repo-card" style="animation-delay: ${idx * 0.05}s">
             <div class="repo-header">
                 <h3><a href="${project.web_url}" target="_blank" rel="noopener">${project.name}</a></h3>
                 <span class="gitlab-badge">GitLab</span>

@@ -1872,6 +1872,7 @@ img { max-width: 100%; height: auto; }
     transition: all 0.4s var(--ease-out);
     position: relative;
     overflow: hidden;
+    animation: fadeSlideUp 0.5s var(--ease-out) both;
 }
 
 .repo-card:hover {
