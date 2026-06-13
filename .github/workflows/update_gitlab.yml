@@ -1,0 +1,28 @@
+name: Update GitLab Data
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Run every 6 hours
+  workflow_dispatch: # Allow running manually from the Actions tab
+
+jobs:
+  update-gitlab:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run update script
+        run: python scripts/update_gitlab.py
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add data/gitlab_projects.json data/gitlab_activity.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update GitLab projects and activity details" && git push)

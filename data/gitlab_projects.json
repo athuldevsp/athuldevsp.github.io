@@ -1,0 +1,47 @@
+[
+  {
+    "id": 210263,
+    "name": "Repository For Higgs Affairs  ",
+    "description": "",
+    "web_url": "https://gitlab.cern.ch/asudhaka/repository-of-higgs-affairs",
+    "star_count": 0,
+    "forks_count": 0,
+    "last_activity_at": "2026-06-13T14:24:08.484Z"
+  },
+  {
+    "id": 203320,
+    "name": "Salt-GNTau",
+    "description": "Multimodal and Multiclass Machine Learning for High Energy Physics",
+    "web_url": "https://gitlab.cern.ch/asudhaka/salt-OnlineGNTau",
+    "star_count": 0,
+    "forks_count": 0,
+    "last_activity_at": "2025-02-20T15:47:43.290Z"
+  },
+  {
+    "id": 185741,
+    "name": "Online-tau-ID",
+    "description": "Curated set of ultimate weapons to help you in your fight against misidentified taus",
+    "web_url": "https://gitlab.cern.ch/asudhaka/online-tau-id",
+    "star_count": 1,
+    "forks_count": 1,
+    "last_activity_at": "2025-06-26T14:13:13.994Z"
+  },
+  {
+    "id": 180582,
+    "name": "training-dataset-dumper",
+    "description": "This is the FTAG (training) dataset dumpster (aka TDD). We use it to run away from the ATLAS EDM into the land of H5.",
+    "web_url": "https://gitlab.cern.ch/asudhaka/training-dataset-dumper",
+    "star_count": 0,
+    "forks_count": 0,
+    "last_activity_at": "2024-03-07T17:26:52.162Z"
+  },
+  {
+    "id": 171257,
+    "name": "HLT_bbtautau_trigger_emulation",
+    "description": null,
+    "web_url": "https://gitlab.cern.ch/asudhaka/hlt_bbtautau_trigger_emulation",
+    "star_count": 0,
+    "forks_count": 0,
+    "last_activity_at": "2023-12-02T08:42:29.345Z"
+  }
+]

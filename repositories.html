@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <title>Publications | Athul Dev Sudhakar Ponnu</title>
-    <meta name="description" content="Research publications by Athul Dev Sudhakar Ponnu — ATLAS Collaboration papers, Higgs physics, dark matter searches, and machine learning in HEP.">
+    <title>Repositories | Athul Dev Sudhakar Ponnu</title>
+    <meta name="description" content="Research repositories and code developments of Athul Dev Sudhakar Ponnu on CERN GitLab.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -23,8 +23,8 @@
             <li><a href="index.html">Home</a></li>
             <li><a href="academic.html">Academic Path</a></li>
             <li><a href="experience.html">Experience</a></li>
-            <li><a href="repositories.html">Repositories</a></li>
-            <li><a href="publications.html" class="active">Publications</a></li>
+            <li><a href="repositories.html" class="active">Repositories</a></li>
+            <li><a href="publications.html">Publications</a></li>
             <li><a href="travel.html">Travel</a></li>
         </ul>
     </nav>
@@ -33,43 +33,54 @@
     <header class="page-header">
         <div class="section-container">
             <h1 class="section-title reveal-up">
-                <span class="section-number">04</span>
-                Publications
+                <span class="section-number">03</span>
+                Repositories
             </h1>
             <p class="page-subtitle reveal-up delay-1">
-                Research papers and contributions fetched from Google Scholar.
+                Research code, triggers, and machine learning models hosted on CERN GitLab.
             </p>
         </div>
     </header>
 
-    <!-- Publications Content -->
-    <section class="publications-section">
+    <!-- Activity Calendar Section -->
+    <section class="activity-section">
         <div class="section-container">
-            <!-- Stats -->
-            <div class="pub-stats reveal-up">
-                <div class="pub-stat">
-                    <div class="pub-stat-value" id="stat-pubs">—</div>
-                    <div class="pub-stat-label">Publications</div>
+            <div class="timeline-label reveal-up">
+                <span class="section-number" style="font-size:0.75rem;">01</span> GitLab Activity
+            </div>
+            <div class="activity-card reveal-up delay-1">
+                <div class="activity-header">
+                    <h3>CERN GitLab Contributions</h3>
+                    <p class="activity-subtitle">Daily commits, branch pushes, and merge requests in the last year</p>
                 </div>
-                <div class="pub-stat">
-                    <div class="pub-stat-value" id="stat-citations">—</div>
-                    <div class="pub-stat-label">Citations</div>
+                <div class="activity-grid-container">
+                    <div class="activity-grid" id="activity-grid">
+                        <!-- Populated by JS -->
+                    </div>
                 </div>
-                <div class="pub-stat">
-                    <div class="pub-stat-value" id="stat-hindex">—</div>
-                    <div class="pub-stat-label">h-index</div>
-                </div>
-                <div class="pub-stat">
-                    <div class="pub-stat-value" id="stat-i10">—</div>
-                    <div class="pub-stat-label">i10-index</div>
+                <div class="activity-footer">
+                    <div class="activity-legend">
+                        <span>Less</span>
+                        <span class="legend-cell level-0"></span>
+                        <span class="legend-cell level-1"></span>
+                        <span class="legend-cell level-2"></span>
+                        <span class="legend-cell level-3"></span>
+                        <span class="legend-cell level-4"></span>
+                        <span>More</span>
+                    </div>
                 </div>
             </div>
+        </div>
+    </section>
 
-
-
-            <!-- Publication List -->
-            <div class="pub-list reveal-up delay-2" id="pub-list">
-                <!-- Publications populated by JS -->
+    <!-- Projects List Section -->
+    <section class="repositories-section">
+        <div class="section-container">
+            <div class="timeline-label reveal-up" style="margin-top: 2rem;">
+                <span class="section-number" style="font-size:0.75rem;">02</span> Projects List
+            </div>
+            <div class="repos-grid id="repos-grid" id="repos-grid">
+                <!-- Populated by JS -->
             </div>
         </div>
     </section>
@@ -91,6 +102,6 @@
 
     <script src="particles.js"></script>
     <script src="nav.js"></script>
-    <script src="publications.js"></script>
+    <script src="repositories.js"></script>
 </body>
 </html>

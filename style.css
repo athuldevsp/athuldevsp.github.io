@@ -1739,3 +1739,173 @@ img { max-width: 100%; height: auto; }
         flex-direction: column;
     }
 }
+
+/* ---------- Repositories & Activity Calendar ---------- */
+.activity-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.activity-header h3 {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+
+.activity-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.activity-grid-container {
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 0.5rem;
+}
+
+.activity-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(7, 10px);
+    grid-template-columns: repeat(53, 10px);
+    gap: 3px;
+    width: max-content;
+}
+
+.activity-cell {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    transition: transform 0.2s ease;
+}
+
+.activity-cell:hover {
+    transform: scale(1.3);
+    z-index: 2;
+    box-shadow: 0 0 6px rgba(100, 255, 218, 0.4);
+}
+
+.activity-cell.level-0 { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.02); }
+.activity-cell.level-1 { background: rgba(100, 255, 218, 0.15); }
+.activity-cell.level-2 { background: rgba(100, 255, 218, 0.4); }
+.activity-cell.level-3 { background: rgba(100, 255, 218, 0.7); }
+.activity-cell.level-4 { background: var(--accent-aurora); }
+
+.activity-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.activity-legend {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.legend-cell {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.legend-cell.level-0 { background: rgba(255, 255, 255, 0.03); }
+.legend-cell.level-1 { background: rgba(100, 255, 218, 0.15); }
+.legend-cell.level-2 { background: rgba(100, 255, 218, 0.4); }
+.legend-cell.level-3 { background: rgba(100, 255, 218, 0.7); }
+.legend-cell.level-4 { background: var(--accent-aurora); }
+
+.repos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    .repos-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.repo-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    transition: all 0.4s var(--ease-out);
+    position: relative;
+    overflow: hidden;
+}
+
+.repo-card:hover {
+    border-color: var(--border-glow);
+    background: var(--bg-card-hover);
+    transform: translateY(-4px);
+}
+
+.repo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.repo-header h3 {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.repo-header h3 a {
+    color: var(--text-primary);
+}
+
+.repo-header h3 a:hover {
+    color: var(--accent-aurora);
+}
+
+.gitlab-badge {
+    background: rgba(255, 169, 77, 0.08);
+    border: 1px solid rgba(255, 169, 77, 0.2);
+    color: var(--accent-warm);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+}
+
+.repo-description {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    flex-grow: 1;
+}
+
+.repo-meta {
+    display: flex;
+    gap: 1.2rem;
+    align-items: center;
+    font-size: 0.76rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+}
+
+.repo-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
