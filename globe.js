@@ -380,6 +380,7 @@
         const layout = document.querySelector('.travel-layout');
         if (layout) {
             layout.classList.add('has-selection');
+            triggerLayoutResize();
         }
 
         // Render 2D Mercator projection country detail map
@@ -389,11 +390,37 @@
         renderCountryPlacesList(countryPlaces);
     }
 
+    let layoutResizeFrameId = null;
+    function triggerLayoutResize() {
+        if (layoutResizeFrameId) {
+            cancelAnimationFrame(layoutResizeFrameId);
+        }
+        let startTime = null;
+        const duration = 450; // CSS grid-template-columns transition is 0.4s
+
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const progress = timestamp - startTime;
+            resize();
+            if (selectedCountry) {
+                const countryPlaces = places.filter(p => normalizeCountryName(p.country) === normalizeCountryName(selectedCountry.properties.name));
+                renderCountryMap(selectedCountry, countryPlaces);
+            }
+            if (progress < duration) {
+                layoutResizeFrameId = requestAnimationFrame(step);
+            } else {
+                layoutResizeFrameId = null;
+            }
+        }
+        layoutResizeFrameId = requestAnimationFrame(step);
+    }
+
     function deselectCountry() {
         selectedCountry = null;
         const layout = document.querySelector('.travel-layout');
         if (layout) {
             layout.classList.remove('has-selection');
+            triggerLayoutResize();
         }
     }
 
@@ -654,15 +681,13 @@
         draw(0);
     }
 
-    // Resize observer to handle container size changes dynamically (e.g. split layout transitions)
-    const resizeObserver = new ResizeObserver(() => {
+    window.addEventListener('resize', () => {
         resize();
         if (selectedCountry) {
             const countryPlaces = places.filter(p => normalizeCountryName(p.country) === normalizeCountryName(selectedCountry.properties.name));
             renderCountryMap(selectedCountry, countryPlaces);
         }
     });
-    resizeObserver.observe(canvas.parentElement);
 
     init();
 })();
