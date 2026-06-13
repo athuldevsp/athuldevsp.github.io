@@ -3,392 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Athul Dev Sudhakar Ponnu | HEP Researcher</title>
-    <meta name="description" content="Personal webpage of Athul Dev Sudhakar Ponnu - PhD Researcher in High Energy Physics at University of Göttingen and ATLAS Collaboration (CERN).">
-    
-    <!-- Google Fonts -->
+    <title>Athul Dev Sudhakar Ponnu | Particle Physicist</title>
+    <meta name="description" content="Personal homepage of Athul Dev Sudhakar Ponnu — PhD researcher in High Energy Physics at the University of Göttingen and the ATLAS Experiment at CERN.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- Leaflet Map CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    
-
-    
-    <!-- Custom Style -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Canvas for Particle Tracker Event Displays -->
-    <canvas id="collision-canvas"></canvas>
+    <!-- Animated particle canvas -->
+    <canvas id="particle-canvas"></canvas>
 
-    <div class="hud-overlay">
-        <div class="hud-box hud-left">DETECTOR STATUS: ONLINE</div>
-        <div class="hud-box hud-right">BEAM ENERGY: 13.6 TeV</div>
-    </div>
+    <!-- Aurora overlay -->
+    <div class="aurora-overlay"></div>
 
-    <!-- Main Navigation Bar -->
-    <header class="navbar">
+    <!-- Navigation -->
+    <nav class="main-nav" id="main-nav">
         <div class="nav-brand">
-            <span class="logo-symbol">⚛</span>
-            <span class="logo-text">Athul Dev S.P.</span>
+            <a href="index.html" class="nav-logo">ADSP</a>
         </div>
-        <nav class="nav-links">
-            <a href="#about" class="nav-link active">About</a>
-            <a href="#academic" class="nav-link">Academic Path</a>
-            <a href="#projects" class="nav-link">Projects & Labs</a>
-            <a href="#travel" class="nav-link">Travel Network</a>
-        </nav>
-        <button class="menu-toggle" id="menu-toggle-btn" aria-label="Toggle Menu">
-            <i data-lucide="menu"></i>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+            <span></span><span></span><span></span>
         </button>
-    </header>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="academic.html">Academic Path</a></li>
+            <li><a href="publications.html">Publications</a></li>
+            <li><a href="travel.html">Travel</a></li>
+        </ul>
+    </nav>
 
-    <div class="app-wrapper">
-        <!-- Profile Panel (Left Column on Desktop) -->
-        <aside class="profile-card">
-            <div class="profile-avatar-wrapper">
-                <img src="assets/profile.png" alt="Athul Dev Sudhakar Ponnu" class="profile-avatar">
-                <div class="detector-ring"></div>
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <p class="hero-greeting reveal-up">Hello, I'm</p>
+                <h1 class="hero-name reveal-up delay-1">
+                    <span class="name-line">Athul Dev</span>
+                    <span class="name-line accent">Sudhakar Ponnu</span>
+                </h1>
+                <p class="hero-tagline reveal-up delay-2">PhD Researcher in High Energy Physics</p>
+                <p class="hero-description reveal-up delay-3">
+                    Exploring the fundamental building blocks of the universe at the 
+                    <strong>ATLAS Experiment</strong>, CERN. Searching for dark matter 
+                    signatures in association with tau leptons and developing 
+                    transformer-based ML algorithms for particle identification.
+                </p>
+                <div class="hero-badges reveal-up delay-4">
+                    <span class="badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        University of Göttingen
+                    </span>
+                    <span class="badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        ATLAS Experiment, CERN
+                    </span>
+                    <span class="badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                        Higgs · Dark Matter · ML
+                    </span>
+                </div>
+                <div class="hero-cta reveal-up delay-5">
+                    <a href="academic.html" class="btn btn-primary">Explore My Journey</a>
+                    <a href="publications.html" class="btn btn-secondary">Publications</a>
+                </div>
             </div>
-            
-            <h1 class="name-heading">Athul Dev Sudhakar Ponnu</h1>
-            <p class="subtitle">PhD Candidate in High Energy Physics</p>
-            
-            <div class="badge-row">
-                <span class="badge badge-cern">ATLAS Collaboration</span>
-                <span class="badge badge-uni">Uni Göttingen</span>
+            <div class="hero-visual reveal-up delay-3">
+                <div class="profile-frame">
+                    <div class="profile-ring"></div>
+                    <div class="profile-img-wrapper">
+                        <img src="assets/profile.png" alt="Athul Dev Sudhakar Ponnu" class="profile-img" onerror="this.style.display='none'; this.parentElement.classList.add('placeholder-active');">
+                        <div class="profile-placeholder">
+                            <span>A</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Decorative orbits -->
+                <div class="orbit orbit-1"><div class="orbit-dot"></div></div>
+                <div class="orbit orbit-2"><div class="orbit-dot"></div></div>
+                <div class="orbit orbit-3"><div class="orbit-dot"></div></div>
             </div>
+        </div>
+        <div class="scroll-indicator reveal-up delay-5">
+            <span>Scroll to explore</span>
+            <div class="scroll-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+        </div>
+    </section>
 
-            <div class="profile-details">
-                <div class="info-item">
-                    <i data-lucide="map-pin" class="info-icon"></i>
-                    <span>Göttingen, Germany</span>
+    <!-- About Section -->
+    <section class="about-section" id="about">
+        <div class="section-container">
+            <h2 class="section-title reveal-up">
+                <span class="section-number">01</span>
+                About Me
+            </h2>
+            <div class="about-grid">
+                <div class="about-text reveal-up delay-1">
+                    <p>
+                        I am a PhD researcher at the <strong>II. Physikalisches Institut</strong>, 
+                        University of Göttingen, working under the supervision of 
+                        <strong>Prof. Dr. Stan Lai</strong>. My research focuses on searching 
+                        for dark matter produced in association with two tau leptons using 
+                        the ATLAS detector at the Large Hadron Collider.
+                    </p>
+                    <p>
+                        I develop and optimize transformer-based machine learning algorithms 
+                        for identifying hadronically decaying tau leptons, contributing to 
+                        ATLAS publications and collaborating with an international research team 
+                        to probe new physics beyond the Standard Model.
+                    </p>
                 </div>
-                <div class="info-item">
-                    <i data-lucide="mail" class="info-icon"></i>
-                    <a href="mailto:athul.dev.sudhakar.ponnu@cern.ch">athul.dev.sudhakar.ponnu@cern.ch</a>
-                </div>
-                <div class="info-item">
-                    <i data-lucide="phone" class="info-icon"></i>
-                    <span>+49 1521 3879780</span>
+                <div class="about-cards reveal-up delay-2">
+                    <div class="info-card">
+                        <div class="info-card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        </div>
+                        <h3>Research Interests</h3>
+                        <ul class="interest-tags">
+                            <li>Higgs Physics</li>
+                            <li>Dark Matter</li>
+                            <li>Tau Leptons</li>
+                            <li>Machine Learning in HEP</li>
+                            <li>Trigger Systems</li>
+                        </ul>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <h3>Contact</h3>
+                        <p class="contact-info">
+                            <a href="mailto:athul.dev.sudhakar.ponnu@cern.ch">athul.dev.sudhakar.ponnu@cern.ch</a>
+                        </p>
+                        <p class="contact-location">Göttingen, Germany</p>
+                    </div>
                 </div>
             </div>
-
-            <div class="social-links">
-                <a href="https://github.com" target="_blank" class="social-btn" aria-label="GitHub"><i data-lucide="github"></i></a>
-                <a href="https://linkedin.com" target="_blank" class="social-btn" aria-label="LinkedIn"><i data-lucide="linkedin"></i></a>
-                <a href="https://twitter.com" target="_blank" class="social-btn" aria-label="Twitter"><i data-lucide="twitter"></i></a>
+            <div class="skills-section reveal-up delay-3">
+                <h3 class="subsection-title">Technical Skills</h3>
+                <div class="skills-grid">
+                    <div class="skill-group">
+                        <h4>Languages</h4>
+                        <div class="skill-pills">
+                            <span class="skill-pill">Python</span>
+                            <span class="skill-pill">C/C++</span>
+                            <span class="skill-pill">ROOT</span>
+                            <span class="skill-pill">SQL</span>
+                        </div>
+                    </div>
+                    <div class="skill-group">
+                        <h4>Tools</h4>
+                        <div class="skill-pills">
+                            <span class="skill-pill">Git</span>
+                            <span class="skill-pill">VS Code</span>
+                            <span class="skill-pill">Conda</span>
+                            <span class="skill-pill">LaTeX</span>
+                        </div>
+                    </div>
+                    <div class="skill-group">
+                        <h4>Spoken Languages</h4>
+                        <div class="skill-pills">
+                            <span class="skill-pill">Tamil</span>
+                            <span class="skill-pill">English (C1)</span>
+                            <span class="skill-pill">Malayalam (B1)</span>
+                            <span class="skill-pill">German (B1.1)</span>
+                            <span class="skill-pill">Hindi (A2)</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </aside>
+        </div>
+    </section>
 
-        <!-- Main Content (Right Column on Desktop) -->
-        <main class="content-wrapper">
-            
-            <!-- Section: About & Research -->
-            <section id="about" class="page-section section-visible">
-                <h2 class="section-title"><span class="title-index">01/</span> Research Statement & Profile</h2>
-                
-                <div class="glass-box research-statement">
-                    <p class="intro-p">I am an experimental particle physicist working at the boundary of subatomic physics, collider analysis, and deep learning algorithms.</p>
-                    <p>Following the discovery of the Higgs boson in 2012, my primary research focus centers on measuring its properties. Specifically, I study the <strong>Higgs trilinear self-coupling</strong>—a critical parameter providing direct insights into the shape of the Higgs potential. This coupling is probed at the Large Hadron Collider (LHC) through Higgs boson pair production ($hh \rightarrow b\bar{b}\tau^-\tau^+$ decay channel).</p>
-                    <p>For my Master's and PhD, I have optimized trigger chains using combinations of Python and C++ data analysis pipelines. I analyze Monte Carlo samples and Enhanced Bias datasets, optimizing variables like transverse momentum ($p_T$), Recurrent Neural Network (RNN) tau identifiers, and jet-particle angular separation ($\Delta R$) to enhance signal-to-background efficiency. My analyses leverage Graph Neural Networks (GNN) and high-performance computing resources via the ATLAS grid network.</p>
-                </div>
-
-                <div class="two-column">
-                    <!-- Core Skills -->
-                    <div class="glass-box skill-panel">
-                        <h3 class="box-title"><i data-lucide="cpu"></i> Technical Skills</h3>
-                        <div class="skill-category">
-                            <span class="skill-label">Programming:</span>
-                            <div class="tags-row">
-                                <span class="tag">Python</span>
-                                <span class="tag">C/C++</span>
-                                <span class="tag">ROOT</span>
-                                <span class="tag">SQL (Postgres)</span>
-                            </div>
-                        </div>
-                        <div class="skill-category">
-                            <span class="skill-label">Tools & Frameworks:</span>
-                            <div class="tags-row">
-                                <span class="tag">Git</span>
-                                <span class="tag">Conda</span>
-                                <span class="tag">VS Code</span>
-                                <span class="tag">ATLAS Grid</span>
-                            </div>
-                        </div>
-                        <div class="skill-category">
-                            <span class="skill-label">Packages & Graphics:</span>
-                            <div class="tags-row">
-                                <span class="tag">LaTeX</span>
-                                <span class="tag">Photoshop</span>
-                                <span class="tag">Animate</span>
-                                <span class="tag">Audacity</span>
-                            </div>
-                        </div>
+    <!-- Quick Links Section -->
+    <section class="quicklinks-section" id="quicklinks">
+        <div class="section-container">
+            <h2 class="section-title reveal-up">
+                <span class="section-number">02</span>
+                Explore
+            </h2>
+            <div class="quicklinks-grid reveal-up delay-1">
+                <a href="academic.html" class="quicklink-card">
+                    <div class="quicklink-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>
                     </div>
-
-                    <!-- Languages -->
-                    <div class="glass-box language-panel">
-                        <h3 class="box-title"><i data-lucide="languages"></i> Languages</h3>
-                        <div class="language-bars">
-                            <div class="lang-bar-item">
-                                <div class="lang-info"><span>Tamil (Mother Tongue)</span> <span>Native</span></div>
-                                <div class="bar-outer"><div class="bar-inner" style="width: 100%;"></div></div>
-                            </div>
-                            <div class="lang-bar-item">
-                                <div class="lang-info"><span>English (C1)</span> <span>Fluent</span></div>
-                                <div class="bar-outer"><div class="bar-inner" style="width: 90%;"></div></div>
-                            </div>
-                            <div class="lang-bar-item">
-                                <div class="lang-info"><span>German (B1.1)</span> <span>Intermediate</span></div>
-                                <div class="bar-outer"><div class="bar-inner" style="width: 55%;"></div></div>
-                            </div>
-                            <div class="lang-bar-item">
-                                <div class="lang-info"><span>Malayalam (B1)</span> <span>Intermediate</span></div>
-                                <div class="bar-outer"><div class="bar-inner" style="width: 50%;"></div></div>
-                            </div>
-                            <div class="lang-bar-item">
-                                <div class="lang-info"><span>Hindi (A2)</span> <span>Basic</span></div>
-                                <div class="bar-outer"><div class="bar-inner" style="width: 35%;"></div></div>
-                            </div>
-                        </div>
+                    <h3>Academic Path</h3>
+                    <p>Education, work experience, and research milestones</p>
+                    <span class="quicklink-arrow">→</span>
+                </a>
+                <a href="publications.html" class="quicklink-card">
+                    <div class="quicklink-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                     </div>
-                </div>
-            </section>
-
-            <!-- Section: Academic & Work Path -->
-            <section id="academic" class="page-section">
-                <h2 class="section-title"><span class="title-index">02/</span> Academic & Work Path</h2>
-                
-                <div class="timeline">
-                    <!-- Ph.D. -->
-                    <div class="timeline-item reveal-on-scroll">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-card">
-                            <div class="timeline-header">
-                                <span class="timeline-period">02/2024 - Present</span>
-                                <h3 class="timeline-title">PhD in High Energy Physics</h3>
-                                <h4 class="timeline-location">University of Göttingen | Germany</h4>
-                            </div>
-                            <p class="timeline-desc">Thesis: Search for dark matter produced in association with two tau leptons using the ATLAS detector. Supervised by Prof. Dr. Stan Lai.</p>
-                            <ul class="timeline-points">
-                                <li>Developed and optimized transformer-based machine learning algorithms for identifying hadronically decaying tau leptons.</li>
-                                <li>Collaborate within international teams analyzing signal and background topologies to probe new physics.</li>
-                            </ul>
-                        </div>
+                    <h3>Publications</h3>
+                    <p>Research papers from Google Scholar & ATLAS collaboration</p>
+                    <span class="quicklink-arrow">→</span>
+                </a>
+                <a href="travel.html" class="quicklink-card">
+                    <div class="quicklink-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                     </div>
+                    <h3>Travel Map</h3>
+                    <p>An animated globe of places I've explored around the world</p>
+                    <span class="quicklink-arrow">→</span>
+                </a>
+            </div>
+        </div>
+    </section>
 
-                    <!-- Masters -->
-                    <div class="timeline-item reveal-on-scroll">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-card">
-                            <div class="timeline-header">
-                                <span class="timeline-period">10/2021 - 12/2023</span>
-                                <h3 class="timeline-title">Masters in Physics</h3>
-                                <h4 class="timeline-location">University of Göttingen | Germany</h4>
-                            </div>
-                            <p class="timeline-desc">Thesis: Trigger Optimization Studies in the ATLAS search for Higgs Boson Pair Production in $hh \rightarrow b\bar{b}\tau^-\tau^+$ channel. CGPA: 1.7 (German Scale).</p>
-                            <ul class="timeline-points">
-                                <li>Gained expertise in High-Level Trigger (HLT) systems for tracking tau leptons.</li>
-                                <li>Optimized trigger parameters using ROOT and advanced multivariate statistics.</li>
-                            </ul>
-                        </div>
-                    </div>
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="mailto:athul.dev.sudhakar.ponnu@cern.ch" aria-label="Email">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </a>
+                <a href="https://github.com/athuldevsp" target="_blank" rel="noopener" aria-label="GitHub">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                </a>
+            </div>
+            <p class="footer-text">© 2024 Athul Dev Sudhakar Ponnu. Built with curiosity and code.</p>
+        </div>
+    </footer>
 
-                    <!-- Work: Lab Tutor -->
-                    <div class="timeline-item reveal-on-scroll">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-card card-work">
-                            <div class="timeline-header">
-                                <span class="timeline-period">10/2022 - 06/2023</span>
-                                <h3 class="timeline-title">Physics Lab Tutor</h3>
-                                <h4 class="timeline-location">University of Göttingen | Germany</h4>
-                            </div>
-                            <p class="timeline-desc">Instructed laboratory sessions for physics and non-physics majors, helping them grasp complex fundamental experiments.</p>
-                            <ul class="timeline-points">
-                                <li>Tutored experimental techniques for Solar cells, capacitance measures, Transformer Gain, dispersive power of prisms, and diffraction gratings.</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Work: Intern Delhi -->
-                    <div class="timeline-item reveal-on-scroll">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-card card-work">
-                            <div class="timeline-header">
-                                <span class="timeline-period">05/2021 - 06/2021</span>
-                                <h3 class="timeline-title">Summer Project Intern</h3>
-                                <h4 class="timeline-location">Inter University Accelerator Center | Delhi, India</h4>
-                            </div>
-                            <p class="timeline-desc">Project: Utilizing EDX to Understand $e^-$ Beam-Solid Interactions. Hands-on experience with scanning electron microscopes.</p>
-                            <ul class="timeline-points">
-                                <li>Analyzed Energy Dispersive X-ray (EDX) spectra of thin-film AuPd samples.</li>
-                                <li>Simulated electron solid scattering parameters using MC-XRAY.</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Bachelors -->
-                    <div class="timeline-item reveal-on-scroll">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-card">
-                            <div class="timeline-header">
-                                <span class="timeline-period">06/2018 - 05/2021</span>
-                                <h3 class="timeline-title">Bachelors in Physics</h3>
-                                <h4 class="timeline-location">Amrita Vishwa Vidyapeetham | Coimbatore, India</h4>
-                            </div>
-                            <p class="timeline-desc">Thesis: Aspects of Cosmological Evolution. CGPA: 9.17 / 10.0.</p>
-                            <ul class="timeline-points">
-                                <li>Simplified Newtonian approximations to explain modern cosmological expansion models without full General Relativity.</li>
-                                <li>Active leadership roles in University clubs (Mathematics, Astronomy, Media).</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section: Projects & Experimental Labs -->
-            <section id="projects" class="page-section">
-                <h2 class="section-title"><span class="title-index">03/</span> Projects & Lab Experiments</h2>
-
-                <div class="projects-grid">
-                    <!-- Project 1 -->
-                    <div class="project-item glass-box reveal-on-scroll">
-                        <div class="proj-header">
-                            <span class="proj-type">Master's Thesis</span>
-                            <span class="proj-date">2023</span>
-                        </div>
-                        <h3 class="proj-title">ATLAS Trigger Optimization</h3>
-                        <p class="proj-desc">Optimized High-Level Trigger chains for $hh \rightarrow b\bar{b}\tau^-\tau^+$ searches. Analyzed Monte Carlo and Enhanced Bias data, focusing on GNN b-jet taggers and RNN tau parameters.</p>
-                    </div>
-
-                    <!-- Project 2 -->
-                    <div class="project-item glass-box reveal-on-scroll">
-                        <div class="proj-header">
-                            <span class="proj-type">Bachelor's Thesis</span>
-                            <span class="proj-date">2021</span>
-                        </div>
-                        <h3 class="proj-title">Aspects of Cosmological Evolution</h3>
-                        <p class="proj-desc">Developed an educational guide simplifying modern cosmological parameters using energy conservation and Newtonian gravity to bypass full General Relativity equations.</p>
-                    </div>
-
-                    <!-- Project 3 -->
-                    <div class="project-item glass-box reveal-on-scroll">
-                        <div class="proj-header">
-                            <span class="proj-type">Machine Learning</span>
-                            <span class="proj-date">2023</span>
-                        </div>
-                        <h3 class="proj-title">Predicting Research Citation Impact</h3>
-                        <p class="proj-desc">Designed a Python machine learning pipeline that references paper features (e.g. fields, authors, abstract metadata) to predict future citation frequency intervals.</p>
-                    </div>
-                </div>
-
-                <!-- Dedicated Labs Section -->
-                <div class="lab-courses-section">
-                    <h3 class="sub-section-title"><i data-lucide="beaker"></i> Experimental Physics Labs (Göttingen)</h3>
-                    <div class="lab-grid">
-                        <div class="lab-item glass-box">
-                            <div class="lab-icon"><i data-lucide="activity"></i></div>
-                            <div class="lab-details">
-                                <h4>ATLAS $h \rightarrow \gamma\gamma$ Analysis</h4>
-                                <p>Standard Model Higgs decay search simulation and analysis pipeline.</p>
-                            </div>
-                        </div>
-                        <div class="lab-item glass-box">
-                            <div class="lab-icon"><i data-lucide="globe"></i></div>
-                            <div class="lab-details">
-                                <h4>ENZO Dark Matter Halos Simulation</h4>
-                                <p>Cosmological structure simulations for dark matter cluster evolution.</p>
-                            </div>
-                        </div>
-                        <div class="lab-item glass-box">
-                            <div class="lab-icon"><i data-lucide="satellite"></i></div>
-                            <div class="lab-details">
-                                <h4>CMB Angular Spectrum Analysis</h4>
-                                <p>Cosmic Microwave Background power spectrum anisotropy models.</p>
-                            </div>
-                        </div>
-                        <div class="lab-item glass-box">
-                            <div class="lab-icon"><i data-lucide="zap"></i></div>
-                            <div class="lab-details">
-                                <h4>Proton Induced X-ray Emission</h4>
-                                <p>PIXE spectroscopy measurements for multi-element analysis.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Awards Section -->
-                <div class="awards-sub-section glass-box">
-                    <div class="award-header">
-                        <i data-lucide="award" class="award-icon"></i>
-                        <div>
-                            <h3>University Physics Competition (2020)</h3>
-                            <h4>Silver Medal - International Undergraduate Contest</h4>
-                        </div>
-                    </div>
-                    <p>Analyzed real-world physics scenarios (such as quadcopter stability in dynamic wind fields and roller coaster G-force thrills) within a strict 48-hour time limit to produce publication-grade research submissions.</p>
-                </div>
-            </section>
-
-            <!-- Section: Travel Network -->
-            <section id="travel" class="page-section">
-                <h2 class="section-title"><span class="title-index">04/</span> Travel Network</h2>
-                
-                <div class="glass-box travel-box">
-                    <p class="travel-intro">Tracks visited locations around the globe for summer schools (HASCO), research internships (Delhi), and PhD studies (Göttingen/Geneva).</p>
-                    
-
-
-                    <!-- Tactical Neon Map container -->
-                    <div class="map-wrapper glass-box">
-                        <div id="travel-map" class="travel-map"></div>
-                    </div>
-
-                    <div class="hubs-grid">
-                        <div class="hub-card glass-box" data-lat="51.5413" data-lng="9.9079">
-                            <span class="hub-num">H1</span>
-                            <h4>Göttingen, Germany</h4>
-                            <p>University of Göttingen (PhD studies & research base)</p>
-                        </div>
-                        <div class="hub-card glass-box" data-lat="46.2044" data-lng="6.1432">
-                            <span class="hub-num">H2</span>
-                            <h4>Geneva, Switzerland</h4>
-                            <p>CERN (ATLAS detector experiments & detector trigger tests)</p>
-                        </div>
-                        <div class="hub-card glass-box" data-lat="28.6139" data-lng="77.2090">
-                            <span class="hub-num">H3</span>
-                            <h4>Delhi, India</h4>
-                            <p>IUAC (Summer Project Intern - EDX analysis)</p>
-                        </div>
-                        <div class="hub-card glass-box" data-lat="11.0168" data-lng="76.9558">
-                            <span class="hub-num">H4</span>
-                            <h4>Coimbatore, India</h4>
-                            <p>Amrita University (Bachelors studies in Physics)</p>
-                        </div>
-                        <div class="hub-card glass-box" data-lat="13.0827" data-lng="80.2707">
-                            <span class="hub-num">H5</span>
-                            <h4>Chennai, India</h4>
-                            <p>Swamy's School (Secondary Certificate & Robotics studies)</p>
-                        </div>
-                        <div class="hub-card glass-box" data-lat="12.9716" data-lng="77.5946">
-                            <span class="hub-num">H6</span>
-                            <h4>Bangalore, India</h4>
-                            <p>SSERD (Research Intern - Exoplanet Stability Simulations)</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- Custom Script -->
-    <script src="script.js"></script>
+    <script src="particles.js"></script>
+    <script src="nav.js"></script>
 </body>
 </html>
