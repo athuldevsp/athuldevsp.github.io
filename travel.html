@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- D3 for proper globe projection -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 </head>
 <body>
     <canvas id="particle-canvas"></canvas>
@@ -50,25 +53,11 @@
                 </div>
             </div>
 
-            <!-- CSV Upload for Google Maps Timeline -->
-            <div class="travel-upload reveal-up delay-3">
-                <h3>📍 Add Your Google Maps Timeline</h3>
-                <p>
-                    Export your location history from Google Maps Timeline 
-                    (Settings → Export Timeline data) and upload the CSV/JSON here.
-                    Or simply drop a CSV file with <code>name,lat,lng,country,note</code> columns.
-                </p>
-                <div class="upload-area" id="upload-area">
-                    <input type="file" id="csv-upload" accept=".csv,.json">
-                    <label for="csv-upload">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        Click to upload or drag & drop your file
-                    </label>
-                </div>
-            </div>
-
             <!-- Places List -->
             <h3 class="subsection-title reveal-up delay-3">Places Visited</h3>
+            <p class="page-subtitle reveal-up delay-3" style="margin-bottom: 1.5rem; font-size: 0.85rem;">
+                Locations are loaded from <code>data/places.csv</code> — add more rows to update the globe.
+            </p>
             <div class="places-list reveal-up delay-4" id="places-list">
                 <!-- Populated by JS -->
             </div>

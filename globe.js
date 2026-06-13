@@ -1,8 +1,8 @@
 /* ============================================================
-   Interactive Animated Globe — Pure Canvas + D3-geo-like math
-   Renders an animated wireframe globe with location markers,
-   arcs between places, and smooth rotation.
-   No external 3D libraries — just Canvas 2D + spherical math.
+   Interactive Animated Globe — D3-geo + Canvas
+   Uses proper orthographic projection with Natural Earth 110m
+   topojson world map data for accurate country rendering.
+   Places are loaded from data/places.csv.
    ============================================================ */
 
 (function () {
@@ -10,281 +10,247 @@
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // --- Default Places (from CV locations) ---
-    let places = [
-        { name: 'Göttingen', lat: 51.5339, lng: 9.9356, country: 'Germany', note: 'PhD & Masters — University of Göttingen' },
-        { name: 'Geneva (CERN)', lat: 46.2044, lng: 6.1432, country: 'Switzerland', note: 'ATLAS Experiment at CERN' },
-        { name: 'Delhi', lat: 28.6139, lng: 77.209, country: 'India', note: 'Summer Intern — IUAC' },
-        { name: 'Coimbatore', lat: 11.0168, lng: 76.9558, country: 'India', note: 'BSc Physics — Amrita University' },
-        { name: 'Chennai', lat: 13.0827, lng: 80.2707, country: 'India', note: 'Hometown — Higher Secondary' },
-        { name: 'Bangalore', lat: 12.9716, lng: 77.5946, country: 'India', note: 'Research Intern — SSERD' },
-        { name: 'Dortmund', lat: 51.5136, lng: 7.4653, country: 'Germany', note: 'DPG Spring Meeting 2024' },
-    ];
-
-    // --- Globe Config ---
-    let width, height, cx, cy, radius;
-    let rotation = { x: -20, y: 30 }; // lon, lat view angles
+    // --- State ---
+    let width, height;
+    let projection, path;
+    let worldData = null;
+    let places = [];
     let autoRotate = true;
     let isDragging = false;
     let dragStart = { x: 0, y: 0 };
-    let rotStart = { x: 0, y: 0 };
-    let hoverPlace = null;
+    let rotationStart = [0, 0];
+    let currentRotation = [0, -20, 0]; // [lambda, phi, gamma]
+    let velocity = 0.2; // degrees per frame for auto-rotate
+    let animFrame;
+    let lastTime = 0;
 
-    // --- GeoJSON-like data: simplified continents ---
-    // We'll draw graticules + land outlines from simplified coordinates
-    const DEG = Math.PI / 180;
-
+    // --- Sizing ---
     function resize() {
         const rect = canvas.parentElement.getBoundingClientRect();
-        canvas.width = rect.width * window.devicePixelRatio;
-        canvas.height = rect.height * window.devicePixelRatio;
-        canvas.style.width = rect.width + 'px';
-        canvas.style.height = rect.height + 'px';
-        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        const dpr = window.devicePixelRatio || 1;
         width = rect.width;
         height = rect.height;
-        cx = width / 2;
-        cy = height / 2;
-        radius = Math.min(width, height) * 0.38;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const radius = Math.min(width, height) * 0.42;
+        projection = d3.geoOrthographic()
+            .translate([width / 2, height / 2])
+            .scale(radius)
+            .rotate(currentRotation)
+            .clipAngle(90);
+
+        path = d3.geoPath(projection, ctx);
     }
 
-    // --- Spherical → Screen projection (orthographic) ---
-    function project(lat, lng) {
-        const lambda = (lng + rotation.x) * DEG;
-        const phi = lat * DEG;
-        const cosPhi = Math.cos(phi);
-        const sinPhi = Math.sin(phi);
-        const cosLambda = Math.cos(lambda);
-        const sinLambda = Math.sin(lambda);
-
-        const rotY = rotation.y * DEG;
-        const cosRotY = Math.cos(rotY);
-        const sinRotY = Math.sin(rotY);
-
-        // Orthographic projection with tilt
-        const x = cosPhi * sinLambda;
-        const y = sinPhi * cosRotY - cosPhi * cosLambda * sinRotY;
-        const z = sinPhi * sinRotY + cosPhi * cosLambda * cosRotY;
-
-        if (z < -0.05) return null; // behind globe
-
-        return {
-            x: cx + x * radius,
-            y: cy - y * radius,
-            z: z,
-            scale: (z + 1) / 2
-        };
+    // --- Load World TopoJSON ---
+    async function loadWorld() {
+        try {
+            const resp = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+            const topo = await resp.json();
+            worldData = {
+                land: topojson.feature(topo, topo.objects.land),
+                countries: topojson.feature(topo, topo.objects.countries),
+                borders: topojson.mesh(topo, topo.objects.countries, (a, b) => a !== b)
+            };
+        } catch (err) {
+            console.error('Failed to load world data:', err);
+        }
     }
 
-    // --- Draw Graticules ---
-    function drawGraticules() {
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.06)';
-        ctx.lineWidth = 0.5;
-
-        // Latitude lines
-        for (let lat = -80; lat <= 80; lat += 20) {
-            ctx.beginPath();
-            let started = false;
-            for (let lng = -180; lng <= 180; lng += 3) {
-                const p = project(lat, lng);
-                if (p) {
-                    if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-                    else ctx.lineTo(p.x, p.y);
-                } else {
-                    started = false;
+    // --- Load Places from CSV ---
+    async function loadPlaces() {
+        try {
+            const resp = await fetch('data/places.csv');
+            const text = await resp.text();
+            const lines = text.trim().split('\n');
+            // Skip header
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(',').map(s => s.trim());
+                if (cols.length >= 3) {
+                    const lat = parseFloat(cols[1]);
+                    const lng = parseFloat(cols[2]);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        places.push({
+                            name: cols[0],
+                            lat, lng,
+                            country: cols[3] || '',
+                            note: cols[4] || ''
+                        });
+                    }
                 }
             }
-            ctx.stroke();
+        } catch (err) {
+            console.error('Failed to load places CSV:', err);
+            // Fallback defaults
+            places = [
+                { name: 'Göttingen', lat: 51.5339, lng: 9.9356, country: 'Germany', note: 'PhD & Masters' },
+                { name: 'Geneva (CERN)', lat: 46.2044, lng: 6.1432, country: 'Switzerland', note: 'ATLAS Experiment' },
+                { name: 'Chennai', lat: 13.0827, lng: 80.2707, country: 'India', note: 'Hometown' },
+            ];
         }
-
-        // Longitude lines
-        for (let lng = -180; lng < 180; lng += 30) {
-            ctx.beginPath();
-            let started = false;
-            for (let lat = -90; lat <= 90; lat += 3) {
-                const p = project(lat, lng);
-                if (p) {
-                    if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-                    else ctx.lineTo(p.x, p.y);
-                } else {
-                    started = false;
-                }
-            }
-            ctx.stroke();
-        }
+        renderPlacesList();
     }
 
-    // --- Simplified continent outlines ---
-    // Major landmass boundary points (very simplified for performance)
-    const CONTINENTS = [
-        // Europe (simplified)
-        [[71,28],[70,30],[65,28],[60,30],[55,23],[50,5],[48,0],[43,-9],[36,-6],[36,0],[38,10],[39,20],[40,26],[42,28],[45,30],[48,28],[52,20],[54,12],[56,10],[58,20],[60,25],[65,28],[70,30],[71,28]],
-        // Africa
-        [[37,-10],[35,10],[33,13],[30,32],[25,33],[20,37],[15,40],[10,42],[5,40],[0,42],[-5,40],[-10,35],[-15,35],[-20,30],[-25,28],[-30,25],[-34,18],[-34,24],[-30,30],[-25,33],[-20,35],[-15,40],[-10,42],[-5,42],[0,45],[5,50],[10,50],[15,50],[20,40],[25,37],[30,33],[33,20],[35,15],[37,-10]],
-        // Asia (simplified)
-        [[50,40],[45,50],[40,55],[35,55],[30,50],[25,55],[22,60],[20,65],[15,75],[10,80],[5,100],[0,105],[-5,106],[-8,115],[0,120],[5,120],[10,125],[15,120],[20,110],[23,113],[25,105],[30,100],[35,105],[38,115],[40,125],[42,130],[45,135],[50,140],[55,135],[60,140],[65,170],[70,180],[72,170],[72,140],[70,120],[68,100],[65,80],[60,65],[55,60],[50,50],[50,40]],
-        // North America (simplified)
-        [[60,-170],[55,-165],[50,-130],[45,-125],[40,-125],[35,-120],[30,-115],[25,-110],[20,-105],[15,-90],[18,-88],[20,-87],[22,-85],[25,-80],[27,-80],[30,-82],[30,-85],[32,-90],[30,-95],[28,-97],[26,-97],[20,-100],[25,-110],[30,-115],[33,-118],[37,-122],[40,-124],[45,-125],[48,-124],[50,-127],[55,-130],[58,-135],[60,-145],[65,-170],[70,-170],[72,-160],[72,-140],[70,-130],[68,-115],[65,-90],[60,-75],[55,-65],[50,-60],[47,-55],[45,-60],[43,-65],[42,-70],[40,-72],[37,-76],[35,-75],[30,-80],[30,-82]],
-        // South America (simplified)
-        [[12,-70],[10,-75],[5,-77],[0,-80],[-5,-80],[-10,-77],[-15,-75],[-20,-70],[-25,-65],[-30,-60],[-35,-57],[-40,-62],[-45,-65],[-50,-70],[-55,-67],[-55,-63],[-50,-60],[-45,-58],[-40,-55],[-35,-50],[-30,-48],[-25,-45],[-20,-40],[-15,-35],[-10,-35],[-5,-35],[0,-50],[5,-60],[10,-65],[12,-70]],
-        // Australia
-        [[-15,130],[-20,115],[-25,115],[-30,115],[-33,120],[-35,135],[-38,145],[-37,150],[-33,152],[-28,153],[-23,150],[-18,148],[-15,145],[-12,142],[-12,135],[-15,130]],
-    ];
+    // --- Drawing ---
+    function draw(time) {
+        ctx.clearRect(0, 0, width, height);
 
-    function drawContinents() {
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.15)';
-        ctx.fillStyle = 'rgba(100, 255, 218, 0.03)';
-        ctx.lineWidth = 0.8;
-
-        for (const continent of CONTINENTS) {
-            ctx.beginPath();
-            let started = false;
-            let allVisible = true;
-            const projected = [];
-
-            for (const [lat, lng] of continent) {
-                const p = project(lat, lng);
-                if (p) {
-                    projected.push(p);
-                    if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-                    else ctx.lineTo(p.x, p.y);
-                } else {
-                    allVisible = false;
-                    started = false;
-                }
-            }
-
-            if (projected.length > 2) {
-                ctx.fill();
-                ctx.stroke();
-            }
+        // Auto-rotation
+        if (autoRotate && !isDragging) {
+            const dt = time - lastTime;
+            currentRotation[0] += velocity * (dt / 16);
+            projection.rotate(currentRotation);
         }
+        lastTime = time;
+
+        drawGlobe();
+        if (worldData) {
+            drawLand();
+            drawBorders();
+        }
+        drawGraticule();
+        drawArcs();
+        drawPlaceMarkers(time);
+
+        animFrame = requestAnimationFrame(draw);
     }
 
-    // --- Draw Location Markers ---
-    function drawPlaces(time) {
-        hoverPlace = null;
+    function drawGlobe() {
+        const cx = width / 2;
+        const cy = height / 2;
+        const r = projection.scale();
 
-        for (const place of places) {
-            const p = project(place.lat, place.lng);
-            if (!p || p.z < 0) continue;
-
-            // Pulsing dot
-            const pulse = Math.sin(time / 600 + place.lat) * 0.3 + 0.7;
-            const dotRadius = 4 * p.scale * pulse + 2;
-
-            // Glow
-            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, dotRadius * 3);
-            grad.addColorStop(0, `rgba(255, 169, 77, ${0.6 * p.scale})`);
-            grad.addColorStop(0.5, `rgba(255, 107, 107, ${0.2 * p.scale})`);
-            grad.addColorStop(1, 'rgba(255, 107, 107, 0)');
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, dotRadius * 3, 0, Math.PI * 2);
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            // Core dot
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, dotRadius, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 169, 77, ${0.9 * p.scale})`;
-            ctx.fill();
-
-            // Label (only for front-facing)
-            if (p.z > 0.3) {
-                ctx.font = `${Math.round(11 * p.scale + 1)}px "Space Grotesk", sans-serif`;
-                ctx.fillStyle = `rgba(232, 234, 246, ${0.8 * p.scale})`;
-                ctx.textAlign = 'left';
-                ctx.fillText(place.name, p.x + dotRadius + 6, p.y + 4);
-            }
-        }
-    }
-
-    // --- Draw arcs between connected places ---
-    function drawArcs(time) {
-        if (places.length < 2) return;
-
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.08)';
-        ctx.lineWidth = 0.8;
-
-        // Connect in order
-        for (let i = 0; i < places.length - 1; i++) {
-            const a = places[i];
-            const b = places[i + 1];
-            drawGreatCircleArc(a.lat, a.lng, b.lat, b.lng, time);
-        }
-    }
-
-    function drawGreatCircleArc(lat1, lng1, lat2, lng2, time) {
-        ctx.beginPath();
-        let started = false;
-        const steps = 30;
-
-        for (let t = 0; t <= steps; t++) {
-            const frac = t / steps;
-            const lat = lat1 + (lat2 - lat1) * frac;
-            const lng = lng1 + (lng2 - lng1) * frac;
-            const p = project(lat, lng);
-            if (p && p.z > -0.1) {
-                if (!started) { ctx.moveTo(p.x, p.y); started = true; }
-                else ctx.lineTo(p.x, p.y);
-            } else {
-                started = false;
-            }
-        }
-        ctx.stroke();
-    }
-
-    // --- Globe sphere outline & glow ---
-    function drawGlobeSphere() {
         // Outer glow
-        const glowGrad = ctx.createRadialGradient(cx, cy, radius * 0.8, cx, cy, radius * 1.3);
-        glowGrad.addColorStop(0, 'rgba(100, 255, 218, 0.02)');
-        glowGrad.addColorStop(0.5, 'rgba(100, 255, 218, 0.01)');
-        glowGrad.addColorStop(1, 'transparent');
+        const glow = ctx.createRadialGradient(cx, cy, r * 0.85, cx, cy, r * 1.4);
+        glow.addColorStop(0, 'rgba(100, 255, 218, 0.04)');
+        glow.addColorStop(0.6, 'rgba(100, 255, 218, 0.01)');
+        glow.addColorStop(1, 'transparent');
         ctx.beginPath();
-        ctx.arc(cx, cy, radius * 1.3, 0, Math.PI * 2);
-        ctx.fillStyle = glowGrad;
+        ctx.arc(cx, cy, r * 1.4, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
         ctx.fill();
 
-        // Globe disc (dark fill)
+        // Globe sphere
         ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(10, 14, 26, 0.4)';
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(8, 12, 28, 0.6)';
         ctx.fill();
-
-        // Border ring
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.12)';
+        ctx.strokeStyle = 'rgba(100, 255, 218, 0.15)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
     }
 
-    // --- Animation Loop ---
-    let animFrame;
-    function animate(time) {
-        // Reset transform for each frame
-        ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
-        ctx.clearRect(0, 0, width, height);
-
-        if (autoRotate && !isDragging) {
-            rotation.x += 0.15;
-        }
-
-        drawGlobeSphere();
-        drawGraticules();
-        drawContinents();
-        drawArcs(time);
-        drawPlaces(time);
-
-        animFrame = requestAnimationFrame(animate);
+    function drawLand() {
+        ctx.beginPath();
+        path(worldData.land);
+        ctx.fillStyle = 'rgba(100, 255, 218, 0.06)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(100, 255, 218, 0.18)';
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
     }
 
-    // --- Mouse / Touch Interaction ---
+    function drawBorders() {
+        ctx.beginPath();
+        path(worldData.borders);
+        ctx.strokeStyle = 'rgba(100, 255, 218, 0.08)';
+        ctx.lineWidth = 0.3;
+        ctx.stroke();
+    }
+
+    function drawGraticule() {
+        const graticule = d3.geoGraticule().step([20, 20])();
+        ctx.beginPath();
+        path(graticule);
+        ctx.strokeStyle = 'rgba(100, 255, 218, 0.04)';
+        ctx.lineWidth = 0.4;
+        ctx.stroke();
+    }
+
+    function drawArcs() {
+        if (places.length < 2) return;
+
+        ctx.strokeStyle = 'rgba(255, 169, 77, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 6]);
+
+        for (let i = 0; i < places.length - 1; i++) {
+            const a = places[i];
+            const b = places[i + 1];
+            const line = {
+                type: 'LineString',
+                coordinates: [[a.lng, a.lat], [b.lng, b.lat]]
+            };
+            ctx.beginPath();
+            path(line);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
+    }
+
+    function drawPlaceMarkers(time) {
+        for (const place of places) {
+            const coords = projection([place.lng, place.lat]);
+            if (!coords) continue;
+
+            // Check if point is on the visible hemisphere
+            const d = d3.geoDistance(
+                [place.lng, place.lat],
+                projection.invert([width / 2, height / 2])
+            );
+            if (d > Math.PI / 2) continue;
+
+            const [px, py] = coords;
+            const pulse = Math.sin(time / 500 + place.lat * 0.1) * 0.35 + 0.65;
+
+            // Glow halo
+            const grad = ctx.createRadialGradient(px, py, 0, px, py, 16);
+            grad.addColorStop(0, `rgba(255, 169, 77, ${0.5 * pulse})`);
+            grad.addColorStop(0.4, `rgba(255, 107, 107, ${0.15 * pulse})`);
+            grad.addColorStop(1, 'transparent');
+            ctx.beginPath();
+            ctx.arc(px, py, 16, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Core dot
+            const dotR = 3.5 * pulse + 1.5;
+            ctx.beginPath();
+            ctx.arc(px, py, dotR, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 169, 77, 0.95)`;
+            ctx.fill();
+
+            // White center
+            ctx.beginPath();
+            ctx.arc(px, py, dotR * 0.4, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fill();
+
+            // Label
+            ctx.font = '12px "Space Grotesk", sans-serif';
+            ctx.fillStyle = 'rgba(232, 234, 246, 0.85)';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+
+            // Background for label
+            const textW = ctx.measureText(place.name).width;
+            ctx.fillStyle = 'rgba(10, 14, 26, 0.6)';
+            ctx.fillRect(px + dotR + 6, py - 8, textW + 8, 16);
+
+            ctx.fillStyle = 'rgba(232, 234, 246, 0.9)';
+            ctx.fillText(place.name, px + dotR + 10, py);
+        }
+    }
+
+    // --- Drag Interaction ---
     canvas.addEventListener('mousedown', (e) => {
         isDragging = true;
         dragStart = { x: e.clientX, y: e.clientY };
-        rotStart = { ...rotation };
+        rotationStart = [...currentRotation];
         canvas.style.cursor = 'grabbing';
     });
 
@@ -292,8 +258,10 @@
         if (!isDragging) return;
         const dx = e.clientX - dragStart.x;
         const dy = e.clientY - dragStart.y;
-        rotation.x = rotStart.x + dx * 0.3;
-        rotation.y = Math.max(-80, Math.min(80, rotStart.y + dy * 0.3));
+        const sensitivity = 0.4;
+        currentRotation[0] = rotationStart[0] + dx * sensitivity;
+        currentRotation[1] = Math.max(-60, Math.min(60, rotationStart[1] - dy * sensitivity));
+        projection.rotate(currentRotation);
     });
 
     window.addEventListener('mouseup', () => {
@@ -301,21 +269,22 @@
         canvas.style.cursor = 'grab';
     });
 
-    // Touch support
+    // Touch
     canvas.addEventListener('touchstart', (e) => {
         isDragging = true;
-        const touch = e.touches[0];
-        dragStart = { x: touch.clientX, y: touch.clientY };
-        rotStart = { ...rotation };
+        const t = e.touches[0];
+        dragStart = { x: t.clientX, y: t.clientY };
+        rotationStart = [...currentRotation];
     }, { passive: true });
 
     canvas.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
-        const touch = e.touches[0];
-        const dx = touch.clientX - dragStart.x;
-        const dy = touch.clientY - dragStart.y;
-        rotation.x = rotStart.x + dx * 0.3;
-        rotation.y = Math.max(-80, Math.min(80, rotStart.y + dy * 0.3));
+        const t = e.touches[0];
+        const dx = t.clientX - dragStart.x;
+        const dy = t.clientY - dragStart.y;
+        currentRotation[0] = rotationStart[0] + dx * 0.4;
+        currentRotation[1] = Math.max(-60, Math.min(60, rotationStart[1] - dy * 0.4));
+        projection.rotate(currentRotation);
     }, { passive: true });
 
     canvas.addEventListener('touchend', () => { isDragging = false; });
@@ -331,132 +300,10 @@
         });
     });
 
-    // --- CSV Upload Handler ---
-    const fileInput = document.getElementById('csv-upload');
-    if (fileInput) {
-        fileInput.addEventListener('change', handleFileUpload);
-    }
-
-    const uploadArea = document.getElementById('upload-area');
-    if (uploadArea) {
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = 'var(--accent-aurora)';
-        });
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.borderColor = '';
-        });
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = '';
-            if (e.dataTransfer.files.length) {
-                handleFile(e.dataTransfer.files[0]);
-            }
-        });
-    }
-
-    function handleFileUpload(e) {
-        if (e.target.files.length) {
-            handleFile(e.target.files[0]);
-        }
-    }
-
-    function handleFile(file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const text = e.target.result;
-
-            if (file.name.endsWith('.json')) {
-                try {
-                    const data = JSON.parse(text);
-                    parseJSONPlaces(data);
-                } catch (err) {
-                    console.error('Invalid JSON:', err);
-                }
-            } else {
-                parseCSVPlaces(text);
-            }
-
-            renderPlacesList();
-        };
-        reader.readAsText(file);
-    }
-
-    function parseCSVPlaces(text) {
-        const lines = text.trim().split('\n');
-        const header = lines[0].toLowerCase();
-        const hasHeader = header.includes('name') || header.includes('lat');
-        const start = hasHeader ? 1 : 0;
-
-        const newPlaces = [];
-        for (let i = start; i < lines.length; i++) {
-            const cols = lines[i].split(',').map(s => s.trim().replace(/^"|"$/g, ''));
-            if (cols.length >= 3) {
-                const name = cols[0];
-                const lat = parseFloat(cols[1]);
-                const lng = parseFloat(cols[2]);
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    newPlaces.push({
-                        name: name,
-                        lat: lat,
-                        lng: lng,
-                        country: cols[3] || '',
-                        note: cols[4] || ''
-                    });
-                }
-            }
-        }
-
-        if (newPlaces.length > 0) {
-            places = [...places, ...newPlaces];
-        }
-    }
-
-    function parseJSONPlaces(data) {
-        // Handle Google Maps Timeline JSON format
-        if (data.timelineObjects) {
-            const newPlaces = [];
-            const seen = new Set();
-            for (const obj of data.timelineObjects) {
-                const visit = obj.placeVisit;
-                if (visit && visit.location) {
-                    const loc = visit.location;
-                    const key = `${loc.name || ''}:${(loc.latitudeE7/1e7).toFixed(2)}`;
-                    if (!seen.has(key) && loc.latitudeE7) {
-                        seen.add(key);
-                        newPlaces.push({
-                            name: loc.name || 'Unknown',
-                            lat: loc.latitudeE7 / 1e7,
-                            lng: loc.longitudeE7 / 1e7,
-                            country: loc.address || '',
-                            note: ''
-                        });
-                    }
-                }
-            }
-            if (newPlaces.length) places = [...places, ...newPlaces];
-        }
-        // Handle simple array format
-        else if (Array.isArray(data)) {
-            for (const item of data) {
-                if (item.lat && item.lng) {
-                    places.push({
-                        name: item.name || 'Unknown',
-                        lat: parseFloat(item.lat),
-                        lng: parseFloat(item.lng),
-                        country: item.country || '',
-                        note: item.note || ''
-                    });
-                }
-            }
-        }
-    }
-
     // --- Render place cards ---
     function renderPlacesList() {
         const list = document.getElementById('places-list');
         if (!list) return;
-
         list.innerHTML = places.map(p => `
             <div class="place-card">
                 <h4>${p.name}</h4>
@@ -467,16 +314,16 @@
     }
 
     // --- Init ---
-    function init() {
+    async function init() {
         resize();
-        renderPlacesList();
-        animate(0);
+        await Promise.all([loadWorld(), loadPlaces()]);
+        draw(0);
     }
 
     window.addEventListener('resize', () => {
         cancelAnimationFrame(animFrame);
         resize();
-        animate(0);
+        draw(0);
     });
 
     init();
