@@ -76,41 +76,96 @@ function renderProjects(projects) {
 // ---- Build dynamic contribution calendar grid ----
 function buildContributionGrid(events) {
     const activityGrid = document.getElementById('activity-grid');
+    const activityMonths = document.getElementById('activity-months');
     if (!activityGrid) return;
 
     // 1. Group events by date (YYYY-MM-DD)
     const counts = {};
+    let minDate = new Date(); // Fallback to today
+    let hasEvents = false;
+
     events.forEach(ev => {
         if (ev.created_at) {
             const dateStr = ev.created_at.substring(0, 10);
             counts[dateStr] = (counts[dateStr] || 0) + 1;
+            
+            const d = new Date(ev.created_at);
+            if (d < minDate) {
+                minDate = d;
+                hasEvents = true;
+            }
         }
     });
 
-    // 2. Determine date range (past 371 days, aligned to start on Sunday)
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0: Sunday, 6: Saturday
-    const daysToShow = 371; // 53 weeks * 7 days
-    
-    // Calculate the start date (Sunday of 53 weeks ago)
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - (daysToShow - 1) + dayOfWeek - 6); 
-    // This adjusts so that the last column aligns with today's weekday
+    // Determine start date (Sunday of the week of the oldest event)
+    const start = new Date(hasEvents ? minDate : new Date());
+    const startDay = start.getDay(); // 0: Sunday, 6: Saturday
+    start.setDate(start.getDate() - startDay); // Go back to Sunday
+    start.setHours(0, 0, 0, 0);
 
-    // Normalize start date to midnight
-    startDate.setHours(0, 0, 0, 0);
+    // Determine end date (Saturday of the current week)
+    const end = new Date();
+    const endDay = end.getDay();
+    end.setDate(end.getDate() + (6 - endDay)); // Go forward to Saturday
+    end.setHours(23, 59, 59, 999);
 
+    // Calculate number of weeks/cells
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const numWeeks = Math.ceil(diffDays / 7);
+    const daysToShow = numWeeks * 7;
+
+    // Apply dynamic grid template column counts
+    activityGrid.style.gridTemplateColumns = `repeat(${numWeeks}, 10px)`;
+    if (activityMonths) {
+        activityMonths.style.gridTemplateColumns = `repeat(${numWeeks}, 10px)`;
+    }
+
+    // 2. Generate month/year timeline labels
+    const monthLabels = [];
+    let lastMonthStr = '';
+    for (let week = 0; week < numWeeks; week++) {
+        const sundayDate = new Date(start);
+        sundayDate.setDate(start.getDate() + week * 7);
+        
+        const monthName = sundayDate.toLocaleDateString(undefined, { month: 'short' });
+        const yearName = sundayDate.getFullYear().toString().substring(2);
+        const monthStr = `${monthName} '${yearName}`;
+        
+        if (monthStr !== lastMonthStr) {
+            monthLabels.push({
+                text: monthStr,
+                column: week + 1
+            });
+            lastMonthStr = monthStr;
+        }
+    }
+
+    // Filter labels to prevent overlaps (minimum gap of 5 weeks)
+    if (activityMonths) {
+        const filteredLabels = [];
+        let lastCol = -10;
+        monthLabels.forEach(label => {
+            if (label.column - lastCol >= 5) {
+                filteredLabels.push(label);
+                lastCol = label.column;
+            }
+        });
+        
+        activityMonths.innerHTML = filteredLabels.map(l => {
+            return `<span style="grid-column: ${l.column};">${l.text}</span>`;
+        }).join('');
+    }
+
+    // 3. Generate all contribution cells
     const cellsHtml = [];
-    
-    // 3. Generate all 371 cells
     for (let i = 0; i < daysToShow; i++) {
-        const currentDate = new Date(startDate);
-        currentDate.setDate(startDate.getDate() + i);
+        const currentDate = new Date(start);
+        currentDate.setDate(start.getDate() + i);
         
         const dateStr = currentDate.toISOString().substring(0, 10);
         const count = counts[dateStr] || 0;
         
-        // Determine level (0 to 4)
         let level = 0;
         if (count > 0 && count <= 2) level = 1;
         else if (count >= 3 && count <= 5) level = 2;
@@ -125,14 +180,10 @@ function buildContributionGrid(events) {
         });
 
         const tooltip = `${count} contribution${count === 1 ? '' : 's'} on ${dateFormatted}`;
-        
         cellsHtml.push({
-            html: `<div class="activity-cell level-${level}" data-date="${dateStr}" data-count="${count}" title="${tooltip}"></div>`,
-            dayOfWeek: currentDate.getDay()
+            html: `<div class="activity-cell level-${level}" data-date="${dateStr}" data-count="${count}" title="${tooltip}"></div>`
         });
     }
 
-    // Grid ordering: D3/GitHub lists cells column by column (Sunday to Saturday, then next week)
-    // D3 handles this by inserting nodes in order. With CSS Grid 'grid-auto-flow: column' it automatically works if elements are in chronological order!
     activityGrid.innerHTML = cellsHtml.map(c => c.html).join('');
 }
