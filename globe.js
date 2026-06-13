@@ -418,8 +418,7 @@
 
         // Setup country fit Mercator projection
         const mProjection = d3.geoMercator()
-            .fitSize([mapWidth - 40, mapHeight - 40], countryFeature)
-            .translate([mapWidth / 2, mapHeight / 2]);
+            .fitSize([mapWidth - 40, mapHeight - 40], countryFeature);
         const mPath = d3.geoPath(mProjection, mctx);
 
         // Draw country shape
