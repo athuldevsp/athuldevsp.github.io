@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        window.__errors = [];
+        window.__logs = [];
+        window.onerror = function(msg, url, line, col, error) {
+            window.__errors.push({msg: msg, url: url, line: line, col: col, error: error ? error.stack : null});
+            return false;
+        };
+        console.log = (function(oldLog) {
+            return function(...args) {
+                window.__logs.push(args.join(' '));
+                oldLog.apply(console, args);
+            };
+        })(console.log);
+        console.error = (function(oldErr) {
+            return function(...args) {
+                window.__logs.push('ERROR: ' + args.join(' '));
+                oldErr.apply(console, args);
+            };
+        })(console.error);
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel Map | Athul Dev Sudhakar Ponnu</title>
