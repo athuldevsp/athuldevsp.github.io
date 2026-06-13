@@ -58,8 +58,6 @@
         height = rect.height;
         canvas.width = width * dpr;
         canvas.height = height * dpr;
-        canvas.style.width = width + 'px';
-        canvas.style.height = height + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
         baseRadius = Math.min(width, height) * 0.42;
@@ -380,39 +378,14 @@
         const layout = document.querySelector('.travel-layout');
         if (layout) {
             layout.classList.add('has-selection');
-            triggerLayoutResize();
         }
 
-        // Render 2D Mercator projection country detail map
-        renderCountryMap(countryFeature, countryPlaces);
-
-        // Render places cards inside detail card
-        renderCountryPlacesList(countryPlaces);
-    }
-
-    let layoutResizeFrameId = null;
-    function triggerLayoutResize() {
-        if (layoutResizeFrameId) {
-            cancelAnimationFrame(layoutResizeFrameId);
-        }
-        let startTime = null;
-        const duration = 450; // CSS grid-template-columns transition is 0.4s
-
-        function step(timestamp) {
-            if (!startTime) startTime = timestamp;
-            const progress = timestamp - startTime;
+        // Wait one frame to let the layout paint, then resize and draw
+        requestAnimationFrame(() => {
             resize();
-            if (selectedCountry) {
-                const countryPlaces = places.filter(p => normalizeCountryName(p.country) === normalizeCountryName(selectedCountry.properties.name));
-                renderCountryMap(selectedCountry, countryPlaces);
-            }
-            if (progress < duration) {
-                layoutResizeFrameId = requestAnimationFrame(step);
-            } else {
-                layoutResizeFrameId = null;
-            }
-        }
-        layoutResizeFrameId = requestAnimationFrame(step);
+            renderCountryMap(countryFeature, countryPlaces);
+            renderCountryPlacesList(countryPlaces);
+        });
     }
 
     function deselectCountry() {
@@ -420,8 +393,10 @@
         const layout = document.querySelector('.travel-layout');
         if (layout) {
             layout.classList.remove('has-selection');
-            triggerLayoutResize();
         }
+        requestAnimationFrame(() => {
+            resize();
+        });
     }
 
     function renderCountryMap(countryFeature, countryPlaces) {
@@ -433,8 +408,6 @@
         
         mapCanvas.width = mrect.width * dpr;
         mapCanvas.height = mrect.height * dpr;
-        mapCanvas.style.width = mrect.width + 'px';
-        mapCanvas.style.height = mrect.height + 'px';
         mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
         mctx.clearRect(0, 0, mrect.width, mrect.height);
