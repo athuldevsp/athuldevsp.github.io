@@ -109,7 +109,7 @@ h1, h2, h3, h4, h5, h6 {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -2;
+    z-index: -1;
     pointer-events: none;
     opacity: 0.6;
 }
@@ -360,6 +360,12 @@ h1, h2, h3, h4, h5, h6 {
     gap: 0.75rem;
     font-size: 0.85rem;
     color: var(--text-secondary);
+    word-break: break-word;
+    width: 100%;
+}
+
+.info-item a {
+    word-break: break-all;
 }
 
 .info-icon {
@@ -622,23 +628,19 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .timeline-header {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    column-gap: 1.5rem;
-    row-gap: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
     margin-bottom: 0.75rem;
     border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
     padding-bottom: 0.75rem;
 }
 
 .timeline-period {
-    grid-row: span 2;
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: var(--accent-cyan);
-    font-weight: 500;
-    align-self: start;
-    padding-top: 0.2rem;
+    font-weight: 600;
 }
 
 .timeline-title {
@@ -869,7 +871,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .sync-container {
-    display: grid;
+    display: none; /* Hidden from public visitors */
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
     align-items: center;
@@ -1119,7 +1121,7 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .navbar {
         padding: 0 1.5rem;
         height: 60px;
@@ -1174,15 +1176,6 @@ h1, h2, h3, h4, h5, h6 {
         left: calc(-1.25rem - 4.5px);
         width: 8px;
         height: 8px;
-    }
-    
-    .timeline-header {
-        grid-template-columns: 1fr;
-        gap: 0.25rem;
-    }
-    
-    .timeline-period {
-        padding-top: 0;
     }
     
     .lab-grid {

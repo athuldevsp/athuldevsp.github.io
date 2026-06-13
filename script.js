@@ -377,6 +377,20 @@ document.addEventListener('DOMContentLoaded', () => {
        ========================================================================== */
     const googleBtn = document.getElementById('custom-google-signin-btn');
     const termBody = document.getElementById('terminal-body');
+    const hudLeft = document.querySelector('.hud-left');
+    const syncContainer = document.querySelector('.sync-container');
+    
+    // Secret double-click command to reveal admin sync tools
+    if (hudLeft && syncContainer) {
+        hudLeft.addEventListener('dblclick', () => {
+            const isHidden = window.getComputedStyle(syncContainer).display === 'none';
+            syncContainer.style.display = isHidden ? 'grid' : 'none';
+            if (isHidden) {
+                termBody.innerHTML = '';
+                appendTerminalLog("Admin Mode Activated. Google Sync options unlocked.", "success");
+            }
+        });
+    }
 
     function appendTerminalLog(text, type = 'info', delay = 0) {
         return new Promise(resolve => {
