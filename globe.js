@@ -38,6 +38,7 @@
     // Country Detail Map Zoom State
     let countryZoomTransform = d3.zoomIdentity;
     let countryZoom = null;
+    let photosManifest = {}; // Country photos manifest
 
     // --- Name Normalization ---
     function normalizeCountryName(country) {
@@ -97,6 +98,60 @@
             }
         } catch (err) {
             console.error('Failed to load official India boundaries:', err);
+        }
+    }
+
+    // --- Load Photos Manifest ---
+    async function loadPhotosManifest() {
+        try {
+            const resp = await fetch('data/photos.json?v=' + Date.now());
+            if (resp.ok) {
+                photosManifest = await resp.json();
+            }
+        } catch (err) {
+            console.error('Failed to load photos manifest:', err);
+        }
+    }
+
+    // --- Render Country Photos ---
+    function renderCountryPhotos(normName) {
+        const section = document.getElementById('country-photos-section');
+        const grid = document.getElementById('country-photos-grid');
+        const hint = section ? section.querySelector('.photo-upload-hint') : null;
+        if (!section || !grid) return;
+
+        // Map normalized country names to manifest keys
+        const keyMap = {
+            'India': 'india',
+            'Germany': 'germany',
+            'Switzerland': 'switzerland',
+            'Iceland': 'iceland',
+            'France': 'france',
+            'Hungary': 'hungary',
+            'Netherlands': 'netherlands',
+            'Belgium': 'belgium',
+            'Austria': 'austria'
+        };
+        const key = keyMap[normName];
+        const photos = key && photosManifest[key] ? photosManifest[key] : [];
+
+        section.style.display = 'block';
+        grid.innerHTML = '';
+
+        if (photos.length === 0) {
+            if (hint) hint.style.display = 'block';
+        } else {
+            if (hint) hint.style.display = 'none';
+            photos.forEach(photoPath => {
+                const img = document.createElement('img');
+                img.src = photoPath;
+                img.alt = normName + ' photo';
+                img.className = 'country-photo';
+                img.loading = 'lazy';
+                img.onerror = () => img.style.display = 'none';
+                img.addEventListener('click', () => openLightbox(photoPath, normName));
+                grid.appendChild(img);
+            });
         }
     }
 
@@ -482,6 +537,9 @@
         }
 
         // Delay slightly to let the CSS display block apply and compute layout width
+        // Load photos for this country
+        renderCountryPhotos(normName);
+
         setTimeout(() => {
             resize();
             renderCountryMap(renderFeature, countryPlaces);
@@ -774,6 +832,21 @@
         });
     });
 
+    // --- Photo Lightbox ---
+    function openLightbox(src, alt) {
+        const existing = document.querySelector('.photo-lightbox');
+        if (existing) existing.remove();
+
+        const lb = document.createElement('div');
+        lb.className = 'photo-lightbox';
+        lb.innerHTML = `<img src="${src}" alt="${alt}">`;
+        lb.addEventListener('click', () => lb.remove());
+        document.addEventListener('keydown', function onKey(e) {
+            if (e.key === 'Escape') { lb.remove(); document.removeEventListener('keydown', onKey); }
+        });
+        document.body.appendChild(lb);
+    }
+
     function initCountryMapZoom() {
         const mapCanvas = document.getElementById('country-map-canvas');
         if (!mapCanvas) return;
@@ -797,7 +870,7 @@
         resize();
         initCountryMapZoom();
         console.log("Loading world map and places CSV...");
-        await Promise.all([loadWorld(), loadPlaces()]);
+        await Promise.all([loadWorld(), loadPlaces(), loadPhotosManifest()]);
         console.log("Loaded " + places.length + " places. Starting draw loop...");
         draw(0);
     }
