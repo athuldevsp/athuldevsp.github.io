@@ -1569,10 +1569,77 @@ img { max-width: 100%; height: auto; }
     color: var(--accent-warm);
 }
 
+/* Google Photos / external video card */
+.video-external-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2.5rem 2rem;
+    text-decoration: none;
+    background: linear-gradient(135deg, rgba(100, 255, 218, 0.04) 0%, rgba(116, 185, 255, 0.04) 100%);
+    transition: background 0.25s;
+    color: var(--text-primary);
+}
+.video-external-card:hover {
+    background: linear-gradient(135deg, rgba(100, 255, 218, 0.08) 0%, rgba(116, 185, 255, 0.08) 100%);
+    color: var(--text-primary);
+}
+
+.video-external-icon {
+    color: var(--accent-aurora);
+    opacity: 0.85;
+    flex-shrink: 0;
+    transition: transform 0.2s var(--ease-spring);
+}
+.video-external-card:hover .video-external-icon {
+    transform: scale(1.12);
+}
+
+.video-external-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.video-external-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-sky);
+    background: rgba(116, 185, 255, 0.08);
+    border: 1px solid rgba(116, 185, 255, 0.2);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    width: fit-content;
+}
+
+.video-external-label {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.video-external-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
 @media (max-width: 768px) {
     .country-video-frame,
     .country-video-player {
         height: 240px;
+    }
+    .video-external-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 2rem 1.5rem;
+        gap: 1rem;
     }
 }
 

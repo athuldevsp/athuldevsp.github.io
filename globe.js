@@ -123,63 +123,85 @@
         }
     }
 
-    // --- Build embeddable URL from any share link ---
-    function buildEmbedUrl(rawUrl) {
-        if (!rawUrl) return null;
+    // --- Classify URL type ---
+    function classifyUrl(rawUrl) {
+        if (!rawUrl || !rawUrl.trim()) return 'none';
         const u = rawUrl.trim();
-        if (!u) return null;
-
-        // YouTube watch → embed
-        const ytMatch = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
-        if (ytMatch) return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&mute=1&loop=1&playlist=${ytMatch[1]}&controls=1`;
-
-        // Already a YouTube embed URL
-        if (u.includes('youtube.com/embed') || u.includes('youtube-nocookie.com/embed')) {
-            return u.includes('autoplay') ? u : u + (u.includes('?') ? '&' : '?') + 'autoplay=1&mute=1';
-        }
-
-        // Google Photos share link — wrap in iframe (best-effort)
-        if (u.includes('photos.google.com') || u.includes('photos.app.goo.gl')) {
-            return u; // returned as-is; we use iframe with the share page
-        }
-
-        // Direct video file
-        if (/\.(mp4|webm|ogg)(\?|$)/i.test(u)) return u;
-
-        // Fallback: try as iframe
-        return u;
+        if (u.includes('photos.google.com') || u.includes('photos.app.goo.gl')) return 'gphoto';
+        if (u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed|youtube-nocookie\.com\/embed)/)) return 'youtube';
+        if (/\.(mp4|webm|ogg)(\?|$)/i.test(u)) return 'direct';
+        return 'iframe'; // generic iframe fallback (Vimeo etc.)
     }
 
     // --- Render Country Video Pane ---
     function renderCountryVideo(normName, countryDisplayName) {
-        const pane    = document.getElementById('country-video-pane');
-        const area    = document.getElementById('video-embed-area');
-        const noLink  = document.getElementById('video-no-link');
-        const title   = document.getElementById('video-pane-title');
+        const pane   = document.getElementById('country-video-pane');
+        const area   = document.getElementById('video-embed-area');
+        const noLink = document.getElementById('video-no-link');
+        const title  = document.getElementById('video-pane-title');
         if (!pane || !area) return;
 
-        const key   = normName.toLowerCase();
-        const entry = countryVideos[key];
+        const key    = normName.toLowerCase();
+        const entry  = countryVideos[key];
         const rawUrl = entry ? entry.url : '';
-        const label  = entry ? entry.label : countryDisplayName;
+        const label  = (entry && entry.label) ? entry.label : countryDisplayName;
 
-        if (title) title.textContent = label || countryDisplayName;
+        if (title) title.textContent = label;
         pane.style.display = 'block';
         area.innerHTML = '';
 
-        const embedUrl = buildEmbedUrl(rawUrl);
+        const type = classifyUrl(rawUrl);
+        const u    = rawUrl ? rawUrl.trim() : '';
 
-        if (!embedUrl) {
-            // No video linked
+        if (type === 'none') {
             if (noLink) noLink.style.display = 'flex';
             return;
         }
         if (noLink) noLink.style.display = 'none';
 
-        // Direct video file
-        if (/\.(mp4|webm|ogg)(\?|$)/i.test(embedUrl)) {
+        // --- Google Photos: blocks iframe embedding (X-Frame-Options: DENY / 403) ---
+        // Show a styled clickable card that opens in a new tab instead.
+        if (type === 'gphoto') {
+            area.innerHTML = `
+                <a href="${u}" target="_blank" rel="noopener" class="video-external-card">
+                    <div class="video-external-icon">
+                        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </div>
+                    <div class="video-external-info">
+                        <div class="video-external-badge">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:4px"><path d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z"/></svg>
+                            Google Photos
+                        </div>
+                        <div class="video-external-label">${label}</div>
+                        <div class="video-external-hint">Click to watch in Google Photos &nbsp;↗</div>
+                    </div>
+                </a>`;
+            return;
+        }
+
+        // --- YouTube: embed via privacy-enhanced nocookie domain ---
+        if (type === 'youtube') {
+            const ytMatch = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+            const embedUrl = ytMatch
+                ? `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&mute=1&loop=1&playlist=${ytMatch[1]}&controls=1`
+                : (u.includes('autoplay') ? u : u + (u.includes('?') ? '&' : '?') + 'autoplay=1&mute=1');
+            const frame = document.createElement('iframe');
+            frame.src = embedUrl;
+            frame.className = 'country-video-frame';
+            frame.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+            frame.allowFullscreen = true;
+            frame.setAttribute('loading', 'lazy');
+            area.appendChild(frame);
+            return;
+        }
+
+        // --- Direct video file (.mp4 / .webm / .ogg) ---
+        if (type === 'direct') {
             const vid = document.createElement('video');
-            vid.src = embedUrl;
+            vid.src = u;
             vid.autoplay = true;
             vid.muted = true;
             vid.loop = true;
@@ -188,16 +210,16 @@
             vid.className = 'country-video-player';
             area.appendChild(vid);
             vid.play().catch(() => {});
-        } else {
-            // iframe (YouTube, Google Photos, etc.)
-            const frame = document.createElement('iframe');
-            frame.src = embedUrl;
-            frame.className = 'country-video-frame';
-            frame.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
-            frame.allowFullscreen = true;
-            frame.setAttribute('loading', 'lazy');
-            area.appendChild(frame);
+            return;
         }
+
+        // --- Generic iframe fallback (Vimeo, etc.) ---
+        const frame = document.createElement('iframe');
+        frame.src = u;
+        frame.className = 'country-video-frame';
+        frame.allow = 'autoplay; fullscreen; encrypted-media';
+        frame.allowFullscreen = true;
+        area.appendChild(frame);
     }
 
     // --- Load World TopoJSON ---
