@@ -660,7 +660,7 @@ img { max-width: 100%; height: auto; }
 /* ---------- Quick Links ---------- */
 .quicklinks-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem;
 }
 
@@ -1648,6 +1648,9 @@ img { max-width: 100%; height: auto; }
 @media (max-width: 992px) {
     .travel-layout.has-selection {
         grid-template-columns: 1fr;
+    }
+    .quicklinks-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
