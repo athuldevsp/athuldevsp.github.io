@@ -18,8 +18,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
-    <!-- Google Identity Services (Google Sign-In API) -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     
     <!-- Custom Style -->
     <link rel="stylesheet" href="style.css">
@@ -345,40 +344,7 @@
                 <div class="glass-box travel-box">
                     <p class="travel-intro">Tracks visited locations around the globe for summer schools (HASCO), research internships (Delhi), and PhD studies (Göttingen/Geneva).</p>
                     
-                    <div class="sync-container">
-                        <div class="sync-prompt">
-                            <p>Automatically sync timeline checkpoints directly from your Google Account history:</p>
-                            
-                            <!-- Google OAuth Button Wrapper -->
-                            <div class="google-btn-wrapper">
-                                <button id="custom-google-signin-btn" class="google-signin-btn">
-                                    <svg class="google-logo" viewBox="0 0 24 24" width="18" height="18">
-                                        <path fill="#ea4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.6 15.02 1 12 1 7.24 1 3.2 3.73 1.25 7.7l3.86 3c.95-2.82 3.59-4.66 6.89-4.66z"/>
-                                        <path fill="#4285f4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.34H12v4.44h6.44c-.28 1.48-1.12 2.73-2.37 3.58v2.98h3.83c2.24-2.06 3.59-5.1 3.59-8.66z"/>
-                                        <path fill="#fbbc05" d="M5.11 10.7c-.24-.7-.37-1.45-.37-2.22s.13-1.52.37-2.22L1.25 7.26C.45 8.87 0 10.68 0 12.5s.45 3.63 1.25 5.24l3.86-3.04z"/>
-                                        <path fill="#34a853" d="M12 23c3.24 0 5.97-1.07 7.96-2.92l-3.83-2.98c-1.06.71-2.42 1.14-4.13 1.14-3.3 0-5.94-1.84-6.89-4.66l-3.86 3c1.95 3.97 5.99 6.7 10.75 6.7z"/>
-                                    </svg>
-                                    <span>Sign in with Google</span>
-                                </button>
-                            </div>
-                        </div>
 
-                        <!-- Animated Terminal Synchronization Panel -->
-                        <div id="sync-terminal" class="sync-terminal">
-                            <div class="terminal-bar">
-                                <div class="term-dots">
-                                    <span class="dot-term red"></span>
-                                    <span class="dot-term yellow"></span>
-                                    <span class="dot-term green"></span>
-                                </div>
-                                <div class="term-title">timeline-synchronizer.sh</div>
-                            </div>
-                            <div class="terminal-body" id="terminal-body">
-                                <span class="term-line prompt">guest@cern.ch:~$ ./sync_locations.sh</span>
-                                <span class="term-line comment"># Click "Sign in with Google" to initialize authentication</span>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Tactical Neon Map container -->
                     <div class="map-wrapper glass-box">
