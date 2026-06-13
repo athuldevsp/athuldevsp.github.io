@@ -1808,6 +1808,7 @@ img { max-width: 100%; height: auto; }
     height: 10px;
     border-radius: 2px;
     transition: transform 0.2s ease;
+    border: 1px solid transparent;
 }
 
 .activity-cell:hover {
@@ -1816,11 +1817,26 @@ img { max-width: 100%; height: auto; }
     box-shadow: 0 0 6px rgba(100, 255, 218, 0.4);
 }
 
-.activity-cell.level-0 { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.02); }
-.activity-cell.level-1 { background: rgba(100, 255, 218, 0.15); }
-.activity-cell.level-2 { background: rgba(100, 255, 218, 0.4); }
-.activity-cell.level-3 { background: rgba(100, 255, 218, 0.7); }
-.activity-cell.level-4 { background: var(--accent-aurora); }
+.activity-cell.level-0, .legend-cell.level-0 { 
+    background: rgba(255, 255, 255, 0.03); 
+    border-color: rgba(255, 255, 255, 0.02); 
+}
+.activity-cell.level-1, .legend-cell.level-1 { 
+    background: rgba(100, 255, 218, 0.3); 
+    border-color: rgba(100, 255, 218, 0.15); 
+}
+.activity-cell.level-2, .legend-cell.level-2 { 
+    background: rgba(100, 255, 218, 0.55); 
+    border-color: rgba(100, 255, 218, 0.3); 
+}
+.activity-cell.level-3, .legend-cell.level-3 { 
+    background: rgba(100, 255, 218, 0.8); 
+    border-color: rgba(100, 255, 218, 0.5); 
+}
+.activity-cell.level-4, .legend-cell.level-4 { 
+    background: var(--accent-aurora); 
+    border-color: rgba(100, 255, 218, 0.7); 
+}
 
 .activity-footer {
     display: flex;
@@ -1840,13 +1856,8 @@ img { max-width: 100%; height: auto; }
     width: 10px;
     height: 10px;
     border-radius: 2px;
+    border: 1px solid transparent;
 }
-
-.legend-cell.level-0 { background: rgba(255, 255, 255, 0.03); }
-.legend-cell.level-1 { background: rgba(100, 255, 218, 0.15); }
-.legend-cell.level-2 { background: rgba(100, 255, 218, 0.4); }
-.legend-cell.level-3 { background: rgba(100, 255, 218, 0.7); }
-.legend-cell.level-4 { background: var(--accent-aurora); }
 
 .repos-grid {
     display: grid;
