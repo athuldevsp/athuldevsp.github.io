@@ -75,12 +75,39 @@
     // --- Load Places from CSV ---
     async function loadPlaces() {
         try {
-            const resp = await fetch('data/places.csv');
+            // Fetch with cache-buster to prevent stale responses
+            const resp = await fetch('data/places.csv?v=' + Date.now());
+            if (!resp.ok) {
+                throw new Error(`HTTP error! status: ${resp.status}`);
+            }
             const text = await resp.text();
             const lines = text.trim().split('\n');
+
+            // Simple parser that respects quotes
+            const parseCSVLine = (line) => {
+                let cols = [];
+                let insideQuote = false;
+                let entry = '';
+                for (let i = 0; i < line.length; i++) {
+                    let char = line[i];
+                    if (char === '"') {
+                        insideQuote = !insideQuote;
+                    } else if (char === ',' && !insideQuote) {
+                        cols.push(entry.trim());
+                        entry = '';
+                    } else {
+                        entry += char;
+                    }
+                }
+                cols.push(entry.trim());
+                return cols.map(s => s.replace(/^"|"$/g, '').trim());
+            };
+
             // Skip header
             for (let i = 1; i < lines.length; i++) {
-                const cols = lines[i].split(',').map(s => s.trim());
+                const line = lines[i].trim();
+                if (!line) continue;
+                const cols = parseCSVLine(line);
                 if (cols.length >= 3) {
                     const lat = parseFloat(cols[1]);
                     const lng = parseFloat(cols[2]);

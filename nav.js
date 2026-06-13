@@ -31,6 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
     /* --- Scroll Reveal --- */
     const revealEls = document.querySelectorAll('.reveal-up');
     if (revealEls.length) {
+        // Fallback: reveal after 1.5s in case observer doesn't trigger (e.g. headless or page load position)
+        const fallbackTimeout = setTimeout(() => {
+            revealEls.forEach(el => el.classList.add('revealed'));
+        }, 1500);
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
