@@ -8,6 +8,9 @@
             window.__errors.push({msg: msg, url: url, line: line, col: col, error: error ? error.stack : null});
             return false;
         };
+        window.addEventListener('unhandledrejection', function(event) {
+            window.__errors.push({msg: "Unhandled Promise Rejection: " + event.reason, url: "", line: 0, col: 0, error: event.reason ? (event.reason.stack || event.reason) : null});
+        });
         console.log = (function(oldLog) {
             return function(...args) {
                 window.__logs.push(args.join(' '));

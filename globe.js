@@ -123,6 +123,7 @@
                     console.log("Successfully replaced India's borders on the globe with the official Survey of India boundaries!");
                 }
             }
+            window.worldDataTest = worldData;
         } catch (err) {
             console.error('Failed to load world data:', err);
         }
@@ -487,6 +488,7 @@
             renderCountryPlacesList(countryPlaces);
         }, 100);
     }
+    window.selectCountryTest = selectCountry;
 
     function deselectCountry() {
         selectedCountry = null;
