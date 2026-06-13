@@ -23,6 +23,10 @@
     let velocity = 0.2; // degrees per frame for auto-rotate
     let animFrame;
     let lastTime = 0;
+    let zoomFactor = 1.0;
+    let baseRadius = 0;
+    let initialTouchDistance = null;
+    let initialZoomFactor = 1.0;
 
     // --- Sizing ---
     function resize() {
@@ -36,14 +40,21 @@
         canvas.style.height = height + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        const radius = Math.min(width, height) * 0.42;
+        baseRadius = Math.min(width, height) * 0.42;
         projection = d3.geoOrthographic()
             .translate([width / 2, height / 2])
-            .scale(radius)
+            .scale(baseRadius * zoomFactor)
             .rotate(currentRotation)
             .clipAngle(90);
 
         path = d3.geoPath(projection, ctx);
+    }
+
+    function adjustZoom(delta) {
+        zoomFactor = Math.max(0.4, Math.min(6.0, zoomFactor + delta));
+        if (projection) {
+            projection.scale(baseRadius * zoomFactor);
+        }
     }
 
     // --- Load World TopoJSON ---
@@ -246,7 +257,7 @@
         }
     }
 
-    // --- Drag Interaction ---
+    // --- Drag & Zoom Interaction ---
     canvas.addEventListener('mousedown', (e) => {
         isDragging = true;
         dragStart = { x: e.clientX, y: e.clientY };
@@ -269,34 +280,79 @@
         canvas.style.cursor = 'grab';
     });
 
-    // Touch
+    // Scroll Zoom
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.08 : -0.08;
+        adjustZoom(delta);
+    }, { passive: false });
+
+    // Touch and Pinch-to-Zoom Helper
+    function getTouchDistance(touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
     canvas.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        const t = e.touches[0];
-        dragStart = { x: t.clientX, y: t.clientY };
-        rotationStart = [...currentRotation];
+        if (e.touches.length === 2) {
+            isDragging = false;
+            initialTouchDistance = getTouchDistance(e.touches);
+            initialZoomFactor = zoomFactor;
+        } else {
+            isDragging = true;
+            const t = e.touches[0];
+            dragStart = { x: t.clientX, y: t.clientY };
+            rotationStart = [...currentRotation];
+        }
     }, { passive: true });
 
     canvas.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        const t = e.touches[0];
-        const dx = t.clientX - dragStart.x;
-        const dy = t.clientY - dragStart.y;
-        currentRotation[0] = rotationStart[0] + dx * 0.4;
-        currentRotation[1] = Math.max(-60, Math.min(60, rotationStart[1] - dy * 0.4));
-        projection.rotate(currentRotation);
+        if (e.touches.length === 2 && initialTouchDistance !== null) {
+            const currentDist = getTouchDistance(e.touches);
+            const ratio = currentDist / initialTouchDistance;
+            zoomFactor = Math.max(0.4, Math.min(6.0, initialZoomFactor * ratio));
+            if (projection) {
+                projection.scale(baseRadius * zoomFactor);
+            }
+        } else if (isDragging && e.touches.length === 1) {
+            const t = e.touches[0];
+            const dx = t.clientX - dragStart.x;
+            const dy = t.clientY - dragStart.y;
+            currentRotation[0] = rotationStart[0] + dx * 0.4;
+            currentRotation[1] = Math.max(-60, Math.min(60, rotationStart[1] - dy * 0.4));
+            projection.rotate(currentRotation);
+        }
     }, { passive: true });
 
-    canvas.addEventListener('touchend', () => { isDragging = false; });
+    canvas.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) {
+            initialTouchDistance = null;
+        }
+        if (e.touches.length === 0) {
+            isDragging = false;
+        }
+    });
 
     canvas.style.cursor = 'grab';
 
     // --- Controls ---
     document.querySelectorAll('.globe-controls button').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.globe-controls button').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            autoRotate = btn.dataset.action === 'rotate';
+            const action = btn.dataset.action;
+            if (action === 'rotate' || action === 'drag') {
+                document.querySelectorAll('.globe-controls button').forEach(b => {
+                    if (b.dataset.action === 'rotate' || b.dataset.action === 'drag') {
+                        b.classList.remove('active');
+                    }
+                });
+                btn.classList.add('active');
+                autoRotate = action === 'rotate';
+            } else if (action === 'zoom-in') {
+                adjustZoom(0.3);
+            } else if (action === 'zoom-out') {
+                adjustZoom(-0.3);
+            }
         });
     });
 
