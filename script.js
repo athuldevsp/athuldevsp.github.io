@@ -1,162 +1,177 @@
 document.addEventListener('DOMContentLoaded', () => {
     /* ==========================================================================
-       1. Lucide Icons Setup
+       1. HTML5 Canvas: ATLAS Detector Collision Particle Simulator
+       ========================================================================== */
+    const canvas = document.getElementById('collision-canvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+        
+        let particles = [];
+        
+        // Handle screen resizing
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+        
+        class Particle {
+            constructor(x, y, angle, speed, charge, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.charge = charge; // -1 (bend left), 0 (straight), 1 (bend right)
+                this.color = color;
+                this.alpha = 1.0;
+                this.decay = 0.006 + Math.random() * 0.008;
+                this.history = [];
+                this.maxHistory = 15 + Math.floor(Math.random() * 15);
+            }
+            
+            update() {
+                this.history.push({ x: this.x, y: this.y });
+                if (this.history.length > this.maxHistory) {
+                    this.history.shift();
+                }
+                
+                // Bend in magnetic field (Lorentz Force simulation)
+                if (this.charge !== 0) {
+                    const bendAngle = 0.035 * this.charge;
+                    const cos = Math.cos(bendAngle);
+                    const sin = Math.sin(bendAngle);
+                    const newVx = this.vx * cos - this.vy * sin;
+                    const newVy = this.vx * sin + this.vy * cos;
+                    this.vx = newVx;
+                    this.vy = newVy;
+                }
+                
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+            
+            draw() {
+                if (this.history.length < 2) return;
+                
+                ctx.beginPath();
+                ctx.moveTo(this.history[0].x, this.history[0].y);
+                for (let i = 1; i < this.history.length; i++) {
+                    ctx.lineTo(this.history[i].x, this.history[i].y);
+                }
+                ctx.strokeStyle = this.color.replace('ALPHA', this.alpha.toFixed(2));
+                ctx.lineWidth = 1.5;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = this.color.replace('ALPHA', '0.5');
+                ctx.stroke();
+                ctx.shadowBlur = 0; // Reset shadow
+            }
+        }
+        
+        // Spawn collision event at coordinates (x, y)
+        function spawnCollision(x, y) {
+            const count = 8 + Math.floor(Math.random() * 8);
+            const colors = [
+                'rgba(34, 211, 238, ALPHA)',  // Cyan
+                'rgba(168, 85, 247, ALPHA)', // Violet
+                'rgba(255, 42, 95, ALPHA)'    // Coral
+            ];
+            
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1.5 + Math.random() * 3.5;
+                const charge = Math.floor(Math.random() * 3) - 1; // -1, 0, 1
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                particles.push(new Particle(x, y, angle, speed, charge, color));
+            }
+        }
+        
+        // Loop physics & drawing
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            particles.forEach((p, idx) => {
+                p.update();
+                p.draw();
+                if (p.alpha <= 0) {
+                    particles.splice(idx, 1);
+                }
+            });
+            
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        // Spawn collision on window click
+        window.addEventListener('click', (e) => {
+            spawnCollision(e.clientX, e.clientY);
+        });
+        
+        // Spawn auto collisions on interval near center
+        setInterval(() => {
+            if (particles.length < 40) {
+                const cx = width / 2 + (Math.random() - 0.5) * 200;
+                const cy = height / 2 + (Math.random() - 0.5) * 200;
+                spawnCollision(cx, cy);
+            }
+        }, 3000);
+        
+        // Spawn collisions when hovering on glass boxes
+        document.querySelectorAll('.glass-box, .profile-card, .timeline-card').forEach(box => {
+            box.addEventListener('mouseenter', (e) => {
+                const rect = box.getBoundingClientRect();
+                spawnCollision(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            });
+        });
+    }
+
+    /* ==========================================================================
+       2. Lucide Icons Setup
        ========================================================================== */
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
 
     /* ==========================================================================
-       2. Theme Management (Light / Dark)
+       3. Responsive Mobile Drawer Menu Toggle
        ========================================================================== */
-    const themeToggleBtn = document.getElementById('theme-toggle-btn');
-    const htmlElement = document.documentElement;
+    const menuToggleBtn = document.getElementById('menu-toggle-btn');
+    const navLinksContainer = document.querySelector('.nav-links');
     
-    // Check local storage or system preferences
-    const savedTheme = localStorage.getItem('theme');
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const currentTheme = savedTheme || systemTheme;
-    
-    // Apply current theme
-    htmlElement.setAttribute('data-theme', currentTheme);
-    localStorage.setItem('theme', currentTheme);
-
-    // Click listener to toggle theme
-    themeToggleBtn.addEventListener('click', () => {
-        const nowTheme = htmlElement.getAttribute('data-theme');
-        const newTheme = nowTheme === 'dark' ? 'light' : 'dark';
-        
-        htmlElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        
-        // Update Leaflet map tiles
-        const isDark = newTheme === 'dark';
-        updateMapTiles(isDark);
-    });
-
-    /* ==========================================================================
-       3. Interactive Travel Map (Leaflet)
-       ========================================================================== */
-    const mapContainer = document.getElementById('travel-map');
-    let map;
-    let tileLayer;
-    const markers = {};
-    
-    const locations = [
-        {
-            name: "San Francisco, USA",
-            coords: [37.7749, -122.4194],
-            desc: "<div class='map-popup'><strong>San Francisco, USA</strong><br>Google DeepMind Intern & NeurIPS Attendee</div>"
-        },
-        {
-            name: "Zurich, Switzerland",
-            coords: [47.3769, 8.5417],
-            desc: "<div class='map-popup'><strong>Zurich, Switzerland</strong><br>Master's studies at ETH Zurich, hiking in the Alps</div>"
-        },
-        {
-            name: "Mumbai, India",
-            coords: [19.0760, 72.8777],
-            desc: "<div class='map-popup'><strong>Mumbai, India</strong><br>IIT Bombay CSE B.Tech. studies</div>"
-        },
-        {
-            name: "Tokyo, Japan",
-            coords: [35.6762, 139.6503],
-            desc: "<div class='map-popup'><strong>Tokyo, Japan</strong><br>Visiting and exploring local culture</div>"
-        }
-    ];
-
-    function updateMapTiles(isDark) {
-        if (!map) return;
-        if (tileLayer) {
-            map.removeLayer(tileLayer);
-        }
-        
-        const tileUrl = isDark 
-            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-            : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-            
-        tileLayer = L.tileLayer(tileUrl, {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20
-        }).addTo(map);
-    }
-
-    if (mapContainer) {
-        // Initialize Map
-        map = L.map('travel-map', {
-            center: [25, 10], // Centered representation
-            zoom: 2,
-            minZoom: 1.5,
-            maxZoom: 12,
-            zoomControl: false,
-            scrollWheelZoom: false
-        });
-
-        // Add Zoom Control at custom position
-        L.control.zoom({ position: 'topright' }).addTo(map);
-
-        // Load correct tile set based on initial theme
-        const isThemeDark = htmlElement.getAttribute('data-theme') === 'dark';
-        updateMapTiles(isThemeDark);
-
-        // Custom DivIcon for glowing pulses on pins
-        const customIcon = L.divIcon({
-            className: 'custom-pin-marker',
-            html: '<div class="pin-marker-glow"></div>',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10],
-            popupAnchor: [0, -10]
-        });
-
-        // Add markers
-        locations.forEach(loc => {
-            const marker = L.marker(loc.coords, { icon: customIcon })
-                .bindPopup(loc.desc)
-                .addTo(map);
-            markers[loc.name] = marker;
-        });
-
-        // Pan map on gallery item click
-        const galleryItems = document.querySelectorAll('.gallery-item');
-        galleryItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const lat = parseFloat(item.getAttribute('data-lat'));
-                const lng = parseFloat(item.getAttribute('data-lng'));
-                const name = item.querySelector('h4').textContent;
-                
-                map.setView([lat, lng], 5, {
-                    animate: true,
-                    duration: 1.5
-                });
-                
-                setTimeout(() => {
-                    if (markers[name]) {
-                        markers[name].openPopup();
-                    }
-                }, 1200);
-            });
+    if (menuToggleBtn && navLinksContainer) {
+        menuToggleBtn.addEventListener('click', () => {
+            navLinksContainer.classList.toggle('active');
+            const icon = menuToggleBtn.querySelector('i');
+            if (icon) {
+                if (navLinksContainer.classList.contains('active')) {
+                    icon.setAttribute('data-lucide', 'x');
+                } else {
+                    icon.setAttribute('data-lucide', 'menu');
+                }
+                lucide.createIcons();
+            }
         });
         
-        // Recalculate map size when section reveals to prevent gray load gaps
-        const travelSection = document.getElementById('travel');
-        const travelObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    setTimeout(() => {
-                        map.invalidateSize();
-                    }, 400);
+        // Close menu when clicking nav links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinksContainer.classList.remove('active');
+                const icon = menuToggleBtn.querySelector('i');
+                if (icon) {
+                    icon.setAttribute('data-lucide', 'menu');
+                    lucide.createIcons();
                 }
             });
-        }, { threshold: 0.1 });
-        travelObserver.observe(travelSection);
+        });
     }
 
     /* ==========================================================================
        4. Navigation, Scroll Reveal, and Scroll Spy
        ========================================================================== */
-    const navItems = document.querySelectorAll('.nav-menu .nav-item');
-    const sections = document.querySelectorAll('.content-section');
+    const navItems = document.querySelectorAll('.nav-links .nav-link');
+    const sections = document.querySelectorAll('.page-section');
     const timelineItems = document.querySelectorAll('.timeline-item');
     
     // Smooth scrolling navigation handler
@@ -167,8 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetSection = document.querySelector(targetId);
             
             if (targetSection) {
-                // Determine layout scroll offset
-                const headerOffset = window.innerWidth <= 768 ? 200 : 50;
+                const headerOffset = 80;
                 const elementPosition = targetSection.getBoundingClientRect().top;
                 const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -177,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     behavior: 'smooth'
                 });
 
-                // Set immediate active state
                 navItems.forEach(nav => nav.classList.remove('active'));
                 item.classList.add('active');
             }
@@ -188,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const revealObserverOptions = {
         root: null,
         rootMargin: '-5% 0px -15% 0px',
-        threshold: 0.1
+        threshold: 0.08
     };
 
     const revealObserver = new IntersectionObserver((entries) => {
@@ -207,11 +220,11 @@ document.addEventListener('DOMContentLoaded', () => {
     sections.forEach(sec => revealObserver.observe(sec));
     timelineItems.forEach(item => revealObserver.observe(item));
 
-    // Scroll Spy: Highlight nav item matching viewport location
+    // Scroll Spy: Highlight active nav item
     window.addEventListener('scroll', () => {
         let currentSection = '';
         const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-        const offsetAdjustment = window.innerWidth <= 768 ? 250 : 150;
+        const offsetAdjustment = 150;
 
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
@@ -231,76 +244,209 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /* ==========================================================================
-       5. Mouse-Tracking Radial Card Glow Effect
+       5. Mouse-Tracking Radial Spotlights
        ========================================================================== */
-    const glassCards = document.querySelectorAll('.glass-card, .about-card');
+    const interactiveBoxes = document.querySelectorAll('.glass-box, .profile-card, .timeline-card');
     
-    glassCards.forEach(card => {
-        // Create mouse glow overlay dynamic stylesheet variables
-        card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
+    interactiveBoxes.forEach(box => {
+        box.addEventListener('mousemove', (e) => {
+            const rect = box.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
-            card.style.setProperty('--mouse-x', `${x}px`);
-            card.style.setProperty('--mouse-y', `${y}px`);
+            box.style.setProperty('--mouse-x', `${x}px`);
+            box.style.setProperty('--mouse-y', `${y}px`);
         });
     });
 
     /* ==========================================================================
-       6. Publications Filter System
+       6. Tactical HUD Map & Animated Laser Beams Setup
        ========================================================================== */
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    const pubItems = document.querySelectorAll('.pub-item');
+    const mapContainer = document.getElementById('travel-map');
+    let map;
+    let tileLayer;
+    let markersLayer = L.layerGroup();
+    let pathsLayer = L.layerGroup();
+    
+    // Visited locations from CV
+    const travelDestinations = {
+        H1: { name: "Göttingen, Germany", coords: [51.5413, 9.9079], desc: "<strong>Göttingen, Germany</strong><br>PhD Studies & MSc at Göttingen University" },
+        H2: { name: "Geneva, Switzerland (CERN)", coords: [46.2330, 6.0556], desc: "<strong>Geneva, Switzerland</strong><br>CERN / ATLAS Collaboration detector analysis & trigger work" },
+        H3: { name: "Delhi, India", coords: [28.6139, 77.2090], desc: "<strong>Delhi, India</strong><br>IUAC Intern - electron solid interactions simulated via MC-XRAY" },
+        H4: { name: "Coimbatore, India", coords: [11.0168, 76.9558], desc: "<strong>Coimbatore, India</strong><br>Amrita University - Bachelors in Physics, cosmology thesis" },
+        H5: { name: "Chennai, India", coords: [13.0827, 80.2707], desc: "<strong>Chennai, India</strong><br>Swamy's School - High school, athletics, & 4-year robotics" },
+        H6: { name: "Bangalore, India", coords: [12.9716, 77.5946], desc: "<strong>Bangalore, India</strong><br>SSERD Intern - exoplanet stability simulations" }
+    };
 
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Remove active tag class
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+    if (mapContainer) {
+        // Initialize tactical Leaflet map
+        map = L.map('travel-map', {
+            center: [25, 45], // Centered between Europe and Asia
+            zoom: 2.5,
+            minZoom: 1.5,
+            maxZoom: 10,
+            zoomControl: false,
+            scrollWheelZoom: false
+        });
 
-            const filterValue = btn.getAttribute('data-filter');
+        L.control.zoom({ position: 'topright' }).addTo(map);
 
-            pubItems.forEach(item => {
-                const category = item.getAttribute('data-category');
+        // Load CartoDB Positron maps (will be filtered in CSS to look like glowing vector grids)
+        tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        markersLayer.addTo(map);
+        pathsLayer.addTo(map);
+
+        const customIcon = L.divIcon({
+            className: 'custom-pin-marker',
+            html: '<div class="pin-marker-glow"></div>',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+            popupAnchor: [0, -8]
+        });
+
+        // Function to draw coordinates and connecting trajectories
+        function plotTravelNetwork() {
+            markersLayer.clearLayers();
+            pathsLayer.clearLayers();
+            
+            const origin = travelDestinations.H1; // Göttingen is the research hub
+            
+            // Add Göttingen Hub
+            const originMarker = L.marker(origin.coords, { icon: customIcon })
+                .bindPopup(origin.desc)
+                .addTo(markersLayer);
                 
-                if (filterValue === 'all' || category === filterValue) {
-                    item.style.display = 'flex';
-                    // Re-trigger scroll observer to ensure filter displays are shown correctly
-                    revealObserver.observe(item);
-                } else {
-                    item.style.display = 'none';
-                }
+            // Plot other hubs and connect with animated laser beams
+            Object.keys(travelDestinations).forEach(key => {
+                if (key === 'H1') return; // Skip origin since it's already plotted
+                
+                const target = travelDestinations[key];
+                
+                // Add marker
+                L.marker(target.coords, { icon: customIcon })
+                    .bindPopup(target.desc)
+                    .addTo(markersLayer);
+                
+                // Add animated laser polyline connecting them
+                L.polyline([origin.coords, target.coords], {
+                    color: '#22d3ee', // Cyan beam
+                    weight: 1.5,
+                    opacity: 0.8,
+                    className: 'animated-beam'
+                }).addTo(pathsLayer);
+            });
+        }
+
+        // Plot initial network
+        plotTravelNetwork();
+
+        // Pan map when clicking hub cards
+        document.querySelectorAll('.hub-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const lat = parseFloat(card.getAttribute('data-lat'));
+                const lng = parseFloat(card.getAttribute('data-lng'));
+                
+                map.setView([lat, lng], 5, {
+                    animate: true,
+                    duration: 1.2
+                });
             });
         });
-    });
+
+        // Invalidate map size on section entrance
+        const travelSection = document.getElementById('travel');
+        const travelObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        map.invalidateSize();
+                    }, 400);
+                }
+            });
+        }, { threshold: 0.05 });
+        travelObserver.observe(travelSection);
+    }
 
     /* ==========================================================================
-       7. BibTeX Accordion Code Blocks
+       7. Google Sign-In & Location History Sync Simulation
        ========================================================================== */
-    const bibtexBtns = document.querySelectorAll('.bibtex-trigger');
+    const googleBtn = document.getElementById('custom-google-signin-btn');
+    const termBody = document.getElementById('terminal-body');
 
-    bibtexBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const pubDetailContainer = btn.closest('.pub-details');
-            const codeBlock = pubDetailContainer.querySelector('.bibtex-code');
-            
-            const isOpen = codeBlock.classList.contains('open');
-            
-            // Toggle element class
-            codeBlock.classList.toggle('open');
-
-            // Update button icons & text context
-            if (!isOpen) {
-                btn.innerHTML = '<i data-lucide="chevron-up"></i> Hide BibTeX';
-            } else {
-                btn.innerHTML = '<i data-lucide="quote"></i> BibTeX';
-            }
-            
-            // Re-render icons since HTML content changes
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
+    function appendTerminalLog(text, type = 'info', delay = 0) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                const line = document.createElement('span');
+                line.className = `term-line ${type}`;
+                
+                if (type === 'prompt') {
+                    line.textContent = `guest@cern.ch:~$ ${text}`;
+                } else if (type === 'success') {
+                    line.textContent = `[+] SUCCESS: ${text}`;
+                } else if (type === 'loading') {
+                    line.textContent = `[*] SYNCING: ${text}`;
+                } else {
+                    line.textContent = `[i] LOG: ${text}`;
+                }
+                
+                termBody.appendChild(line);
+                termBody.scrollTop = termBody.scrollHeight;
+                resolve();
+            }, delay);
         });
-    });
+    }
+
+    if (googleBtn && termBody) {
+        googleBtn.addEventListener('click', async () => {
+            // Disable button during synchronization process
+            googleBtn.disabled = true;
+            googleBtn.style.opacity = 0.5;
+
+            // Clear prompt
+            termBody.innerHTML = '';
+            
+            await appendTerminalLog("./sync_locations.sh", "prompt", 200);
+            await appendTerminalLog("Connecting to Google Accounts Auth (OAuth 2.0)...", "info", 600);
+            await appendTerminalLog("Opening Google Sign-In secure popup window...", "info", 500);
+            
+            // Simulating real Google OAuth login delay
+            setTimeout(async () => {
+                await appendTerminalLog("User Authenticated successfully (email: athul.dev.sudhakar.ponnu@cern.ch).", "success", 200);
+                await appendTerminalLog("Requesting Google Maps timeline archive database...", "info", 400);
+                await appendTerminalLog("Querying historical location telemetry logs...", "loading", 500);
+                
+                setTimeout(async () => {
+                    await appendTerminalLog("Successfully parsed location telemetry checkpoints.", "success", 300);
+                    await appendTerminalLog("Discovered travel coordinates around Götitngen, Geneva, Delhi, Coimbatore, Chennai, and Bangalore.", "info", 400);
+                    await appendTerminalLog("Exporting coordinates to map markers Layer...", "loading", 600);
+                    
+                    // Trigger map update animations
+                    if (map) {
+                        map.setView([25, 45], 2.5, { animate: true, duration: 1.5 });
+                        plotTravelNetwork();
+                        
+                        // Add glowing success pulse to map container
+                        mapContainer.parentElement.style.boxShadow = "0 0 25px rgba(16, 185, 129, 0.3)";
+                        setTimeout(() => {
+                            mapContainer.parentElement.style.boxShadow = "";
+                        }, 2000);
+                    }
+                    
+                    await appendTerminalLog("Map updated! 6 tracking coordinates synced. Trajectory beams running.", "success", 400);
+                    await appendTerminalLog("Sync task finished. Connection closed.", "info", 300);
+                    
+                    // Reset button style
+                    googleBtn.style.opacity = 1;
+                    googleBtn.disabled = false;
+                    googleBtn.innerHTML = '<i data-lucide="check"></i><span>Synced With Google</span>';
+                    lucide.createIcons();
+                }, 2000);
+            }, 1500);
+        });
+    }
 });

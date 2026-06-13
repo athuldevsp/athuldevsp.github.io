@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Athul Dev S P | Personal Webpage</title>
-    <meta name="description" content="Personal webpage of Athul Dev S P - Researcher, Developer, and Systems Engineer. Exploring AI, High-Performance Computing, and Distributed Systems.">
+    <title>Athul Dev Sudhakar Ponnu | HEP Researcher</title>
+    <meta name="description" content="Personal webpage of Athul Dev Sudhakar Ponnu - PhD Researcher in High Energy Physics at University of Göttingen and ATLAS Collaboration (CERN).">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -18,442 +18,403 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
+    <!-- Google Identity Services (Google Sign-In API) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
     <!-- Custom Style -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Background glow elements for glassmorphism mesh effect -->
-    <div class="bg-glow bg-glow-1"></div>
-    <div class="bg-glow bg-glow-2"></div>
-    <div class="bg-glow bg-glow-3"></div>
+    <!-- Canvas for Particle Tracker Event Displays -->
+    <canvas id="collision-canvas"></canvas>
 
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar glass-panel">
-            <div class="profile-header">
-                <div class="avatar-container">
-                    <img src="assets/profile.png" alt="Athul Dev S P" class="profile-img">
-                    <div class="avatar-glow"></div>
-                </div>
-                <h1 class="profile-name">Athul Dev S P</h1>
-                <p class="profile-tagline">AI & Systems Researcher</p>
-                <p class="profile-institution">Stanford University</p>
+    <div class="hud-overlay">
+        <div class="hud-box hud-left">DETECTOR STATUS: ONLINE</div>
+        <div class="hud-box hud-right">BEAM ENERGY: 13.6 TeV</div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-brand">
+            <span class="logo-symbol">⚛</span>
+            <span class="logo-text">Athul Dev S.P.</span>
+        </div>
+        <nav class="nav-links">
+            <a href="#about" class="nav-link active">About</a>
+            <a href="#academic" class="nav-link">Academic Path</a>
+            <a href="#projects" class="nav-link">Projects & Labs</a>
+            <a href="#travel" class="nav-link">Travel Network</a>
+        </nav>
+        <button class="menu-toggle" id="menu-toggle-btn" aria-label="Toggle Menu">
+            <i data-lucide="menu"></i>
+        </button>
+    </header>
+
+    <div class="app-wrapper">
+        <!-- Profile Panel (Left Column on Desktop) -->
+        <aside class="profile-card">
+            <div class="profile-avatar-wrapper">
+                <img src="assets/profile.png" alt="Athul Dev Sudhakar Ponnu" class="profile-avatar">
+                <div class="detector-ring"></div>
             </div>
             
-            <nav class="nav-menu">
-                <a href="#about" class="nav-item active" id="nav-about">
-                    <i data-lucide="user" class="nav-icon"></i>
-                    <span>About Me</span>
-                </a>
-                <a href="#education" class="nav-item" id="nav-education">
-                    <i data-lucide="graduation-cap" class="nav-icon"></i>
-                    <span>Education</span>
-                </a>
-                <a href="#experience" class="nav-item" id="nav-experience">
-                    <i data-lucide="briefcase" class="nav-icon"></i>
-                    <span>Experience</span>
-                </a>
-                <a href="#publications" class="nav-item" id="nav-publications">
-                    <i data-lucide="book-open" class="nav-icon"></i>
-                    <span>Publications</span>
-                </a>
-                <a href="#projects" class="nav-item" id="nav-projects">
-                    <i data-lucide="code-2" class="nav-icon"></i>
-                    <span>Projects</span>
-                </a>
-                <a href="#travel" class="nav-item" id="nav-travel">
-                    <i data-lucide="map-pin" class="nav-icon"></i>
-                    <span>Travel</span>
-                </a>
-            </nav>
+            <h1 class="name-heading">Athul Dev Sudhakar Ponnu</h1>
+            <p class="subtitle">PhD Candidate in High Energy Physics</p>
             
-            <div class="sidebar-footer">
-                <div class="social-links">
-                    <a href="https://github.com" target="_blank" class="social-btn" aria-label="GitHub">
-                        <i data-lucide="github"></i>
-                    </a>
-                    <a href="https://linkedin.com" target="_blank" class="social-btn" aria-label="LinkedIn">
-                        <i data-lucide="linkedin"></i>
-                    </a>
-                    <a href="https://twitter.com" target="_blank" class="social-btn" aria-label="Twitter">
-                        <i data-lucide="twitter"></i>
-                    </a>
-                    <a href="mailto:contact@example.com" class="social-btn" aria-label="Email">
-                        <i data-lucide="mail"></i>
-                    </a>
+            <div class="badge-row">
+                <span class="badge badge-cern">ATLAS Collaboration</span>
+                <span class="badge badge-uni">Uni Göttingen</span>
+            </div>
+
+            <div class="profile-details">
+                <div class="info-item">
+                    <i data-lucide="map-pin" class="info-icon"></i>
+                    <span>Göttingen, Germany</span>
                 </div>
-                
-                <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Theme">
-                    <i data-lucide="sun" class="sun-icon"></i>
-                    <i data-lucide="moon" class="moon-icon"></i>
-                    <span>Toggle Theme</span>
-                </button>
+                <div class="info-item">
+                    <i data-lucide="mail" class="info-icon"></i>
+                    <a href="mailto:athul.dev.sudhakar.ponnu@cern.ch">athul.dev.sudhakar.ponnu@cern.ch</a>
+                </div>
+                <div class="info-item">
+                    <i data-lucide="phone" class="info-icon"></i>
+                    <span>+49 1521 3879780</span>
+                </div>
+            </div>
+
+            <div class="social-links">
+                <a href="https://github.com" target="_blank" class="social-btn" aria-label="GitHub"><i data-lucide="github"></i></a>
+                <a href="https://linkedin.com" target="_blank" class="social-btn" aria-label="LinkedIn"><i data-lucide="linkedin"></i></a>
+                <a href="https://twitter.com" target="_blank" class="social-btn" aria-label="Twitter"><i data-lucide="twitter"></i></a>
             </div>
         </aside>
-        
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- About Section -->
-            <section id="about" class="content-section active-section">
-                <div class="section-header">
-                    <h2 class="section-title">About Me</h2>
-                    <div class="accent-line"></div>
-                </div>
+
+        <!-- Main Content (Right Column on Desktop) -->
+        <main class="content-wrapper">
+            
+            <!-- Section: About & Research -->
+            <section id="about" class="page-section section-visible">
+                <h2 class="section-title"><span class="title-index">01/</span> Research Statement & Profile</h2>
                 
-                <div class="glass-panel about-card">
-                    <div class="about-text">
-                        <p class="lead-text">Hello! I'm Athul, a researcher and developer passionate about building scalable, efficient systems for the future of artificial intelligence.</p>
-                        <p>I am currently a Ph.D. candidate in Computer Science at Stanford University. My work lives at the intersection of <strong>Deep Learning, Distributed Systems, and High-Performance Computing (HPC)</strong>. I develop software architectures, training pipelines, and scheduling algorithms that enable massive models to run efficiently across heterogeneous, large-scale GPU clusters.</p>
-                        <p>Previously, I completed my Master's at ETH Zurich, and my Bachelor's at IIT Bombay. When I'm not writing code or analyzing logs, you can find me hiking, taking photos during my travels, or reading about history.</p>
+                <div class="glass-box research-statement">
+                    <p class="intro-p">I am an experimental particle physicist working at the boundary of subatomic physics, collider analysis, and deep learning algorithms.</p>
+                    <p>Following the discovery of the Higgs boson in 2012, my primary research focus centers on measuring its properties. Specifically, I study the <strong>Higgs trilinear self-coupling</strong>—a critical parameter providing direct insights into the shape of the Higgs potential. This coupling is probed at the Large Hadron Collider (LHC) through Higgs boson pair production ($hh \rightarrow b\bar{b}\tau^-\tau^+$ decay channel).</p>
+                    <p>For my Master's and PhD, I have optimized trigger chains using combinations of Python and C++ data analysis pipelines. I analyze Monte Carlo samples and Enhanced Bias datasets, optimizing variables like transverse momentum ($p_T$), Recurrent Neural Network (RNN) tau identifiers, and jet-particle angular separation ($\Delta R$) to enhance signal-to-background efficiency. My analyses leverage Graph Neural Networks (GNN) and high-performance computing resources via the ATLAS grid network.</p>
+                </div>
+
+                <div class="two-column">
+                    <!-- Core Skills -->
+                    <div class="glass-box skill-panel">
+                        <h3 class="box-title"><i data-lucide="cpu"></i> Technical Skills</h3>
+                        <div class="skill-category">
+                            <span class="skill-label">Programming:</span>
+                            <div class="tags-row">
+                                <span class="tag">Python</span>
+                                <span class="tag">C/C++</span>
+                                <span class="tag">ROOT</span>
+                                <span class="tag">SQL (Postgres)</span>
+                            </div>
+                        </div>
+                        <div class="skill-category">
+                            <span class="skill-label">Tools & Frameworks:</span>
+                            <div class="tags-row">
+                                <span class="tag">Git</span>
+                                <span class="tag">Conda</span>
+                                <span class="tag">VS Code</span>
+                                <span class="tag">ATLAS Grid</span>
+                            </div>
+                        </div>
+                        <div class="skill-category">
+                            <span class="skill-label">Packages & Graphics:</span>
+                            <div class="tags-row">
+                                <span class="tag">LaTeX</span>
+                                <span class="tag">Photoshop</span>
+                                <span class="tag">Animate</span>
+                                <span class="tag">Audacity</span>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div class="interests-container">
-                        <h3>Research Interests</h3>
-                        <div class="tags-grid">
-                            <span class="tag"><i data-lucide="cpu" class="tag-icon"></i>Distributed Training</span>
-                            <span class="tag"><i data-lucide="server" class="tag-icon"></i>LLM Systems & Inference</span>
-                            <span class="tag"><i data-lucide="activity" class="tag-icon"></i>High Performance Computing</span>
-                            <span class="tag"><i data-lucide="git-branch" class="tag-icon"></i>Compiler Optimizations</span>
-                            <span class="tag"><i data-lucide="network" class="tag-icon"></i>GPU Kernel Programming</span>
+
+                    <!-- Languages -->
+                    <div class="glass-box language-panel">
+                        <h3 class="box-title"><i data-lucide="languages"></i> Languages</h3>
+                        <div class="language-bars">
+                            <div class="lang-bar-item">
+                                <div class="lang-info"><span>Tamil (Mother Tongue)</span> <span>Native</span></div>
+                                <div class="bar-outer"><div class="bar-inner" style="width: 100%;"></div></div>
+                            </div>
+                            <div class="lang-bar-item">
+                                <div class="lang-info"><span>English (C1)</span> <span>Fluent</span></div>
+                                <div class="bar-outer"><div class="bar-inner" style="width: 90%;"></div></div>
+                            </div>
+                            <div class="lang-bar-item">
+                                <div class="lang-info"><span>German (B1.1)</span> <span>Intermediate</span></div>
+                                <div class="bar-outer"><div class="bar-inner" style="width: 55%;"></div></div>
+                            </div>
+                            <div class="lang-bar-item">
+                                <div class="lang-info"><span>Malayalam (B1)</span> <span>Intermediate</span></div>
+                                <div class="bar-outer"><div class="bar-inner" style="width: 50%;"></div></div>
+                            </div>
+                            <div class="lang-bar-item">
+                                <div class="lang-info"><span>Hindi (A2)</span> <span>Basic</span></div>
+                                <div class="bar-outer"><div class="bar-inner" style="width: 35%;"></div></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
-            
-            <!-- Education Section -->
-            <section id="education" class="content-section">
-                <div class="section-header">
-                    <h2 class="section-title">Education</h2>
-                    <div class="accent-line"></div>
-                </div>
+
+            <!-- Section: Academic & Work Path -->
+            <section id="academic" class="page-section">
+                <h2 class="section-title"><span class="title-index">02/</span> Academic & Work Path</h2>
                 
                 <div class="timeline">
-                    <div class="timeline-item glass-card reveal-on-scroll">
-                        <div class="timeline-badge">
-                            <i data-lucide="graduation-cap"></i>
-                        </div>
-                        <div class="timeline-content">
-                            <span class="timeline-date">2024 — Present</span>
-                            <h3 class="timeline-title">Ph.D. in Computer Science</h3>
-                            <h4 class="timeline-institution">Stanford University</h4>
-                            <p class="timeline-desc">Research focused on Adaptive Pipeline Parallelism and Memory-Aware GPU Scheduling for training foundation models. Advised by Prof. Sarah Jenkins.</p>
-                            <div class="timeline-tags">
-                                <span class="sub-tag">Systems for AI</span>
-                                <span class="sub-tag">GPU Virtualization</span>
+                    <!-- Ph.D. -->
+                    <div class="timeline-item reveal-on-scroll">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-card">
+                            <div class="timeline-header">
+                                <span class="timeline-period">02/2024 - Present</span>
+                                <h3 class="timeline-title">PhD in High Energy Physics</h3>
+                                <h4 class="timeline-location">University of Göttingen | Germany</h4>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="timeline-item glass-card reveal-on-scroll">
-                        <div class="timeline-badge">
-                            <i data-lucide="award"></i>
-                        </div>
-                        <div class="timeline-content">
-                            <span class="timeline-date">2022 — 2024</span>
-                            <h3 class="timeline-title">M.S. in Computer Science</h3>
-                            <h4 class="timeline-institution">ETH Zurich</h4>
-                            <p class="timeline-desc">Specialized in Distributed Computing and Machine Learning. Thesis: "Parallelization Strategies for Sparsified Mixture of Experts (MoE) Models". Graduated with distinction.</p>
-                            <div class="timeline-tags">
-                                <span class="sub-tag">GPA: 5.85/6.0</span>
-                                <span class="sub-tag">MoE Models</span>
-                                <span class="sub-tag">CUDA Programming</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="timeline-item glass-card reveal-on-scroll">
-                        <div class="timeline-badge">
-                            <i data-lucide="book-open"></i>
-                        </div>
-                        <div class="timeline-content">
-                            <span class="timeline-date">2018 — 2022</span>
-                            <h3 class="timeline-title">B.Tech. in Computer Science & Engineering</h3>
-                            <h4 class="timeline-institution">IIT Bombay</h4>
-                            <p class="timeline-desc">Core Computer Science curriculum with major focus on Operating Systems, Networks, and Algorithms. Recipient of Institute Academic Prize for consecutive semesters.</p>
-                            <div class="timeline-tags">
-                                <span class="sub-tag">GPA: 9.8 / 10.0</span>
-                                <span class="sub-tag">Institute Gold Medalist</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Experience Section -->
-            <section id="experience" class="content-section">
-                <div class="section-header">
-                    <h2 class="section-title">Experience</h2>
-                    <div class="accent-line"></div>
-                </div>
-                
-                <div class="timeline">
-                    <div class="timeline-item glass-card reveal-on-scroll">
-                        <div class="timeline-badge">
-                            <i data-lucide="briefcase"></i>
-                        </div>
-                        <div class="timeline-content">
-                            <span class="timeline-date">Jun 2025 — Sep 2025</span>
-                            <h3 class="timeline-title">Research Intern, Gemini Team</h3>
-                            <h4 class="timeline-institution">Google DeepMind</h4>
-                            <ul class="timeline-bullets">
-                                <li>Co-designed next-generation 3D parallelism strategies for training multi-trillion parameter Gemini models.</li>
-                                <li>Reduced training pipeline bubble overhead by 14% via a novel micro-batch rescheduling mechanism.</li>
-                                <li>Implemented custom XLA compiler passes in C++ to optimize cross-GPU communication kernels.</li>
+                            <p class="timeline-desc">Thesis: Search for dark matter produced in association with two tau leptons using the ATLAS detector. Supervised by Prof. Dr. Stan Lai.</p>
+                            <ul class="timeline-points">
+                                <li>Developed and optimized transformer-based machine learning algorithms for identifying hadronically decaying tau leptons.</li>
+                                <li>Collaborate within international teams analyzing signal and background topologies to probe new physics.</li>
                             </ul>
                         </div>
                     </div>
-                    
-                    <div class="timeline-item glass-card reveal-on-scroll">
-                        <div class="timeline-badge">
-                            <i data-lucide="briefcase"></i>
-                        </div>
-                        <div class="timeline-content">
-                            <span class="timeline-date">May 2023 — Aug 2023</span>
-                            <h3 class="timeline-title">Software Engineering Intern, PyTorch Core</h3>
-                            <h4 class="timeline-institution">Meta</h4>
-                            <ul class="timeline-bullets">
-                                <li>Optimized PyTorch Distributed (FSDP) memory layout to enable training larger models on identical GPU capacities.</li>
-                                <li>Spearheaded integration of dynamic Triton-based communication kernels, resulting in 8-12% faster training speedups.</li>
-                                <li>Collaborated with open-source contributors to resolve complex race conditions in distributed execution loops.</li>
+
+                    <!-- Masters -->
+                    <div class="timeline-item reveal-on-scroll">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-card">
+                            <div class="timeline-header">
+                                <span class="timeline-period">10/2021 - 12/2023</span>
+                                <h3 class="timeline-title">Masters in Physics</h3>
+                                <h4 class="timeline-location">University of Göttingen | Germany</h4>
+                            </div>
+                            <p class="timeline-desc">Thesis: Trigger Optimization Studies in the ATLAS search for Higgs Boson Pair Production in $hh \rightarrow b\bar{b}\tau^-\tau^+$ channel. CGPA: 1.7 (German Scale).</p>
+                            <ul class="timeline-points">
+                                <li>Gained expertise in High-Level Trigger (HLT) systems for tracking tau leptons.</li>
+                                <li>Optimized trigger parameters using ROOT and advanced multivariate statistics.</li>
                             </ul>
                         </div>
                     </div>
-                    
-                    <div class="timeline-item glass-card reveal-on-scroll">
-                        <div class="timeline-badge">
-                            <i data-lucide="terminal"></i>
+
+                    <!-- Work: Lab Tutor -->
+                    <div class="timeline-item reveal-on-scroll">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-card card-work">
+                            <div class="timeline-header">
+                                <span class="timeline-period">10/2022 - 06/2023</span>
+                                <h3 class="timeline-title">Physics Lab Tutor</h3>
+                                <h4 class="timeline-location">University of Göttingen | Germany</h4>
+                            </div>
+                            <p class="timeline-desc">Instructed laboratory sessions for physics and non-physics majors, helping them grasp complex fundamental experiments.</p>
+                            <ul class="timeline-points">
+                                <li>Tutored experimental techniques for Solar cells, capacitance measures, Transformer Gain, dispersive power of prisms, and diffraction gratings.</li>
+                            </ul>
                         </div>
-                        <div class="timeline-content">
-                            <span class="timeline-date">Sep 2022 — Jun 2024</span>
-                            <h3 class="timeline-title">Graduate Research Assistant</h3>
-                            <h4 class="timeline-institution">ETH Zurich</h4>
-                            <ul class="timeline-bullets">
-                                <li>Investigated asynchronous decentralized optimization methods for deep networks on resource-constrained nodes.</li>
-                                <li>Published peer-reviewed workshop paper and open-sourced a PyTorch benchmark for low-latency network topologies.</li>
-                                <li>Assisted in teaching the "Distributed Systems" and "Systems Programming" courses (150+ students).</li>
+                    </div>
+
+                    <!-- Work: Intern Delhi -->
+                    <div class="timeline-item reveal-on-scroll">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-card card-work">
+                            <div class="timeline-header">
+                                <span class="timeline-period">05/2021 - 06/2021</span>
+                                <h3 class="timeline-title">Summer Project Intern</h3>
+                                <h4 class="timeline-location">Inter University Accelerator Center | Delhi, India</h4>
+                            </div>
+                            <p class="timeline-desc">Project: Utilizing EDX to Understand $e^-$ Beam-Solid Interactions. Hands-on experience with scanning electron microscopes.</p>
+                            <ul class="timeline-points">
+                                <li>Analyzed Energy Dispersive X-ray (EDX) spectra of thin-film AuPd samples.</li>
+                                <li>Simulated electron solid scattering parameters using MC-XRAY.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Bachelors -->
+                    <div class="timeline-item reveal-on-scroll">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-card">
+                            <div class="timeline-header">
+                                <span class="timeline-period">06/2018 - 05/2021</span>
+                                <h3 class="timeline-title">Bachelors in Physics</h3>
+                                <h4 class="timeline-location">Amrita Vishwa Vidyapeetham | Coimbatore, India</h4>
+                            </div>
+                            <p class="timeline-desc">Thesis: Aspects of Cosmological Evolution. CGPA: 9.17 / 10.0.</p>
+                            <ul class="timeline-points">
+                                <li>Simplified Newtonian approximations to explain modern cosmological expansion models without full General Relativity.</li>
+                                <li>Active leadership roles in University clubs (Mathematics, Astronomy, Media).</li>
                             </ul>
                         </div>
                     </div>
                 </div>
             </section>
-            
-            <!-- Publications Section -->
-            <section id="publications" class="content-section">
-                <div class="section-header">
-                    <h2 class="section-title">Publications</h2>
-                    <div class="accent-line"></div>
-                </div>
-                
-                <div class="pub-filters">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="conference">Conferences</button>
-                    <button class="filter-btn" data-filter="journal">Journals</button>
-                    <button class="filter-btn" data-filter="preprint">Preprints</button>
-                </div>
-                
-                <div class="pub-list">
-                    <!-- Pub 1 -->
-                    <div class="pub-item glass-card reveal-on-scroll" data-category="conference">
-                        <div class="pub-badge">Conference</div>
-                        <div class="pub-details">
-                            <h3 class="pub-title">Scaling Transformer Training via Adaptive Pipeline Parallelism</h3>
-                            <p class="pub-authors"><strong>Athul Dev S P</strong>, Jane Doe, John Smith</p>
-                            <p class="pub-venue">Neural Information Processing Systems (NeurIPS), 2025</p>
-                            <div class="pub-links">
-                                <a href="#" class="pub-link"><i data-lucide="file-text"></i> PDF</a>
-                                <a href="#" class="pub-link"><i data-lucide="github"></i> Code</a>
-                                <button class="pub-link bibtex-trigger"><i data-lucide="quote"></i> BibTeX</button>
-                            </div>
-                            <pre class="bibtex-code"><code>@inproceedings{athul2025scaling,
-  title={Scaling Transformer Training via Adaptive Pipeline Parallelism},
-  author={Athul Dev S P and Doe, Jane and Smith, John},
-  booktitle={Advances in Neural Information Processing Systems},
-  year={2025}
-}</code></pre>
-                        </div>
-                    </div>
-                    
-                    <!-- Pub 2 -->
-                    <div class="pub-item glass-card reveal-on-scroll" data-category="conference">
-                        <div class="pub-badge">Conference</div>
-                        <div class="pub-details">
-                            <h3 class="pub-title">Efficient Memory Management for Large Language Model Inference</h3>
-                            <p class="pub-authors">Jane Doe, <strong>Athul Dev S P</strong>, John Smith</p>
-                            <p class="pub-venue">Symposium on Operating Systems Principles (SOSP), 2024</p>
-                            <div class="pub-links">
-                                <a href="#" class="pub-link"><i data-lucide="file-text"></i> PDF</a>
-                                <a href="#" class="pub-link"><i data-lucide="github"></i> Code</a>
-                                <button class="pub-link bibtex-trigger"><i data-lucide="quote"></i> BibTeX</button>
-                            </div>
-                            <pre class="bibtex-code"><code>@inproceedings{doe2024efficient,
-  title={Efficient Memory Management for Large Language Model Inference},
-  author={Doe, Jane and Athul Dev S P and Smith, John},
-  booktitle={Proceedings of the ACM SIGOPS Symposium on Operating Systems Principles},
-  year={2024}
-}</code></pre>
-                        </div>
-                    </div>
-                    
-                    <!-- Pub 3 -->
-                    <div class="pub-item glass-card reveal-on-scroll" data-category="journal">
-                        <div class="pub-badge text-journal">Journal</div>
-                        <div class="pub-details">
-                            <h3 class="pub-title">Optimizing Data Ingestion in High-Performance Deep Learning Frameworks</h3>
-                            <p class="pub-authors"><strong>Athul Dev S P</strong>, John Smith</p>
-                            <p class="pub-venue">IEEE Transactions on Parallel and Distributed Systems (TPDS), 2023</p>
-                            <div class="pub-links">
-                                <a href="#" class="pub-link"><i data-lucide="file-text"></i> PDF</a>
-                                <button class="pub-link bibtex-trigger"><i data-lucide="quote"></i> BibTeX</button>
-                            </div>
-                            <pre class="bibtex-code"><code>@article{athul2023optimizing,
-  title={Optimizing Data Ingestion in High-Performance Deep Learning Frameworks},
-  author={Athul Dev S P and Smith, John},
-  journal={IEEE Transactions on Parallel and Distributed Systems},
-  volume={34},
-  number={8},
-  pages={2215--2228},
-  year={2023},
-  publisher={IEEE}
-}</code></pre>
-                        </div>
-                    </div>
-                    
-                    <!-- Pub 4 -->
-                    <div class="pub-item glass-card reveal-on-scroll" data-category="preprint">
-                        <div class="pub-badge text-preprint">Preprint</div>
-                        <div class="pub-details">
-                            <h3 class="pub-title">Frictionless Ring All-Reduce: Overcoming Dynamic Network Jitter in Cluster Training</h3>
-                            <p class="pub-authors"><strong>Athul Dev S P</strong>, Alice Johnson, Bob Carter</p>
-                            <p class="pub-venue">arXiv preprint arXiv:2603.14920, 2026</p>
-                            <div class="pub-links">
-                                <a href="#" class="pub-link"><i data-lucide="file-text"></i> arXiv</a>
-                                <a href="#" class="pub-link"><i data-lucide="github"></i> Code</a>
-                                <button class="pub-link bibtex-trigger"><i data-lucide="quote"></i> BibTeX</button>
-                            </div>
-                            <pre class="bibtex-code"><code>@article{athul2026frictionless,
-  title={Frictionless Ring All-Reduce: Overcoming Dynamic Network Jitter in Cluster Training},
-  author={Athul Dev S P and Johnson, Alice and Carter, Bob},
-  journal={arXiv preprint arXiv:2603.14920},
-  year={2026}
-}</code></pre>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Projects Section -->
-            <section id="projects" class="content-section">
-                <div class="section-header">
-                    <h2 class="section-title">Projects</h2>
-                    <div class="accent-line"></div>
-                </div>
-                
+
+            <!-- Section: Projects & Experimental Labs -->
+            <section id="projects" class="page-section">
+                <h2 class="section-title"><span class="title-index">03/</span> Projects & Lab Experiments</h2>
+
                 <div class="projects-grid">
                     <!-- Project 1 -->
-                    <div class="project-card glass-card reveal-on-scroll">
-                        <div class="project-banner">
-                            <i data-lucide="cpu" class="project-banner-icon"></i>
+                    <div class="project-item glass-box reveal-on-scroll">
+                        <div class="proj-header">
+                            <span class="proj-type">Master's Thesis</span>
+                            <span class="proj-date">2023</span>
                         </div>
-                        <div class="project-info">
-                            <div class="project-tech-tags">
-                                <span class="tech-tag">Go</span>
-                                <span class="tech-tag">C++</span>
-                                <span class="tech-tag">gRPC</span>
-                            </div>
-                            <h3 class="project-card-title">Deepspeed-Lite</h3>
-                            <p class="project-card-desc">A lightweight, educational, yet highly optimized implementation of DeepSpeed's ZeRO memory redundancy elimination algorithm. Written in Go/C++ with manual CUDA hooks.</p>
-                            <div class="project-card-links">
-                                <a href="https://github.com" target="_blank" class="project-btn"><i data-lucide="github"></i> GitHub</a>
-                                <a href="#" class="project-btn"><i data-lucide="external-link"></i> Live Demo</a>
-                            </div>
-                        </div>
+                        <h3 class="proj-title">ATLAS Trigger Optimization</h3>
+                        <p class="proj-desc">Optimized High-Level Trigger chains for $hh \rightarrow b\bar{b}\tau^-\tau^+$ searches. Analyzed Monte Carlo and Enhanced Bias data, focusing on GNN b-jet taggers and RNN tau parameters.</p>
                     </div>
-                    
+
                     <!-- Project 2 -->
-                    <div class="project-card glass-card reveal-on-scroll">
-                        <div class="project-banner banner-teal">
-                            <i data-lucide="route" class="project-banner-icon"></i>
+                    <div class="project-item glass-box reveal-on-scroll">
+                        <div class="proj-header">
+                            <span class="proj-type">Bachelor's Thesis</span>
+                            <span class="proj-date">2021</span>
                         </div>
-                        <div class="project-info">
-                            <div class="project-tech-tags">
-                                <span class="tech-tag">Python</span>
-                                <span class="tech-tag">PyTorch</span>
-                                <span class="tech-tag">JavaScript</span>
-                            </div>
-                            <h3 class="project-card-title">GraphRoute</h3>
-                            <p class="project-card-desc">An AI-driven route optimization dashboard mapping logistics schedules. Combines Graph Neural Networks with custom interactive map rendering (Leaflet.js) for routing predictions.</p>
-                            <div class="project-card-links">
-                                <a href="https://github.com" target="_blank" class="project-btn"><i data-lucide="github"></i> GitHub</a>
-                            </div>
-                        </div>
+                        <h3 class="proj-title">Aspects of Cosmological Evolution</h3>
+                        <p class="proj-desc">Developed an educational guide simplifying modern cosmological parameters using energy conservation and Newtonian gravity to bypass full General Relativity equations.</p>
                     </div>
-                    
+
                     <!-- Project 3 -->
-                    <div class="project-card glass-card reveal-on-scroll">
-                        <div class="project-banner banner-purple">
-                            <i data-lucide="sparkles" class="project-banner-icon"></i>
+                    <div class="project-item glass-box reveal-on-scroll">
+                        <div class="proj-header">
+                            <span class="proj-type">Machine Learning</span>
+                            <span class="proj-date">2023</span>
                         </div>
-                        <div class="project-info">
-                            <div class="project-tech-tags">
-                                <span class="tech-tag">HTML5</span>
-                                <span class="tech-tag">CSS3</span>
-                                <span class="tech-tag">ES6 JS</span>
+                        <h3 class="proj-title">Predicting Research Citation Impact</h3>
+                        <p class="proj-desc">Designed a Python machine learning pipeline that references paper features (e.g. fields, authors, abstract metadata) to predict future citation frequency intervals.</p>
+                    </div>
+                </div>
+
+                <!-- Dedicated Labs Section -->
+                <div class="lab-courses-section">
+                    <h3 class="sub-section-title"><i data-lucide="beaker"></i> Experimental Physics Labs (Göttingen)</h3>
+                    <div class="lab-grid">
+                        <div class="lab-item glass-box">
+                            <div class="lab-icon"><i data-lucide="activity"></i></div>
+                            <div class="lab-details">
+                                <h4>ATLAS $h \rightarrow \gamma\gamma$ Analysis</h4>
+                                <p>Standard Model Higgs decay search simulation and analysis pipeline.</p>
                             </div>
-                            <h3 class="project-card-title">GlassyUI</h3>
-                            <p class="project-card-desc">A premium library containing beautiful, responsive CSS components styled with modern glassmorphism principles. Ideal for creating sleek web applications.</p>
-                            <div class="project-card-links">
-                                <a href="https://github.com" target="_blank" class="project-btn"><i data-lucide="github"></i> GitHub</a>
-                                <a href="#" class="project-btn"><i data-lucide="external-link"></i> Docs</a>
+                        </div>
+                        <div class="lab-item glass-box">
+                            <div class="lab-icon"><i data-lucide="globe"></i></div>
+                            <div class="lab-details">
+                                <h4>ENZO Dark Matter Halos Simulation</h4>
+                                <p>Cosmological structure simulations for dark matter cluster evolution.</p>
+                            </div>
+                        </div>
+                        <div class="lab-item glass-box">
+                            <div class="lab-icon"><i data-lucide="satellite"></i></div>
+                            <div class="lab-details">
+                                <h4>CMB Angular Spectrum Analysis</h4>
+                                <p>Cosmic Microwave Background power spectrum anisotropy models.</p>
+                            </div>
+                        </div>
+                        <div class="lab-item glass-box">
+                            <div class="lab-icon"><i data-lucide="zap"></i></div>
+                            <div class="lab-details">
+                                <h4>Proton Induced X-ray Emission</h4>
+                                <p>PIXE spectroscopy measurements for multi-element analysis.</p>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Awards Section -->
+                <div class="awards-sub-section glass-box">
+                    <div class="award-header">
+                        <i data-lucide="award" class="award-icon"></i>
+                        <div>
+                            <h3>University Physics Competition (2020)</h3>
+                            <h4>Silver Medal - International Undergraduate Contest</h4>
+                        </div>
+                    </div>
+                    <p>Analyzed real-world physics scenarios (such as quadcopter stability in dynamic wind fields and roller coaster G-force thrills) within a strict 48-hour time limit to produce publication-grade research submissions.</p>
                 </div>
             </section>
-            
-            <!-- Travel Section -->
-            <section id="travel" class="content-section">
-                <div class="section-header">
-                    <h2 class="section-title">Travels</h2>
-                    <div class="accent-line"></div>
-                </div>
+
+            <!-- Section: Travel Network -->
+            <section id="travel" class="page-section">
+                <h2 class="section-title"><span class="title-index">04/</span> Travel Network</h2>
                 
-                <div class="glass-panel travel-container">
-                    <p class="travel-intro">Exploring the world, one map pin at a time. Here are some of the places I've visited for research internships, conferences, or leisure. Click a pin on the map or a card below to focus the map!</p>
+                <div class="glass-box travel-box">
+                    <p class="travel-intro">Tracks visited locations around the globe for summer schools (HASCO), research internships (Delhi), and PhD studies (Göttingen/Geneva).</p>
                     
-                    <!-- Interactive Leaflet Map -->
-                    <div id="travel-map" class="travel-map glass-card"></div>
-                    
-                    <div class="travel-gallery">
-                        <h3 class="gallery-title">Travel Highlights</h3>
-                        <div class="gallery-grid">
-                            <div class="gallery-item glass-card" data-lat="37.7749" data-lng="-122.4194">
-                                <div class="gallery-icon-container"><i data-lucide="palmtree"></i></div>
-                                <div class="gallery-info">
-                                    <h4>San Francisco, USA</h4>
-                                    <p>Google DeepMind Intern & NeurIPS Attendee</p>
-                                </div>
+                    <div class="sync-container">
+                        <div class="sync-prompt">
+                            <p>Automatically sync timeline checkpoints directly from your Google Account history:</p>
+                            
+                            <!-- Google OAuth Button Wrapper -->
+                            <div class="google-btn-wrapper">
+                                <button id="custom-google-signin-btn" class="google-signin-btn">
+                                    <svg class="google-logo" viewBox="0 0 24 24" width="18" height="18">
+                                        <path fill="#ea4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.6 15.02 1 12 1 7.24 1 3.2 3.73 1.25 7.7l3.86 3c.95-2.82 3.59-4.66 6.89-4.66z"/>
+                                        <path fill="#4285f4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.34H12v4.44h6.44c-.28 1.48-1.12 2.73-2.37 3.58v2.98h3.83c2.24-2.06 3.59-5.1 3.59-8.66z"/>
+                                        <path fill="#fbbc05" d="M5.11 10.7c-.24-.7-.37-1.45-.37-2.22s.13-1.52.37-2.22L1.25 7.26C.45 8.87 0 10.68 0 12.5s.45 3.63 1.25 5.24l3.86-3.04z"/>
+                                        <path fill="#34a853" d="M12 23c3.24 0 5.97-1.07 7.96-2.92l-3.83-2.98c-1.06.71-2.42 1.14-4.13 1.14-3.3 0-5.94-1.84-6.89-4.66l-3.86 3c1.95 3.97 5.99 6.7 10.75 6.7z"/>
+                                    </svg>
+                                    <span>Sign in with Google</span>
+                                </button>
                             </div>
-                            <div class="gallery-item glass-card" data-lat="47.3769" data-lng="8.5417">
-                                <div class="gallery-icon-container"><i data-lucide="snowflake"></i></div>
-                                <div class="gallery-info">
-                                    <h4>Zurich, Switzerland</h4>
-                                    <p>Master's studies at ETH, alpine hiking adventures</p>
+                        </div>
+
+                        <!-- Animated Terminal Synchronization Panel -->
+                        <div id="sync-terminal" class="sync-terminal">
+                            <div class="terminal-bar">
+                                <div class="term-dots">
+                                    <span class="dot-term red"></span>
+                                    <span class="dot-term yellow"></span>
+                                    <span class="dot-term green"></span>
                                 </div>
+                                <div class="term-title">timeline-synchronizer.sh</div>
                             </div>
-                            <div class="gallery-item glass-card" data-lat="19.0760" data-lng="72.8777">
-                                <div class="gallery-icon-container"><i data-lucide="sunset"></i></div>
-                                <div class="gallery-info">
-                                    <h4>Mumbai, India</h4>
-                                    <p>IIT Bombay B.Tech. years, local cultures</p>
-                                </div>
+                            <div class="terminal-body" id="terminal-body">
+                                <span class="term-line prompt">guest@cern.ch:~$ ./sync_locations.sh</span>
+                                <span class="term-line comment"># Click "Sign in with Google" to initialize authentication</span>
                             </div>
-                            <div class="gallery-item glass-card" data-lat="35.6762" data-lng="139.6503">
-                                <div class="gallery-icon-container"><i data-lucide="shrub"></i></div>
-                                <div class="gallery-info">
-                                    <h4>Tokyo, Japan</h4>
-                                    <p>Sightseeing and checking out local technology hubs</p>
-                                </div>
-                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tactical Neon Map container -->
+                    <div class="map-wrapper glass-box">
+                        <div id="travel-map" class="travel-map"></div>
+                    </div>
+
+                    <div class="hubs-grid">
+                        <div class="hub-card glass-box" data-lat="51.5413" data-lng="9.9079">
+                            <span class="hub-num">H1</span>
+                            <h4>Göttingen, Germany</h4>
+                            <p>University of Göttingen (PhD studies & research base)</p>
+                        </div>
+                        <div class="hub-card glass-box" data-lat="46.2044" data-lng="6.1432">
+                            <span class="hub-num">H2</span>
+                            <h4>Geneva, Switzerland</h4>
+                            <p>CERN (ATLAS detector experiments & detector trigger tests)</p>
+                        </div>
+                        <div class="hub-card glass-box" data-lat="28.6139" data-lng="77.2090">
+                            <span class="hub-num">H3</span>
+                            <h4>Delhi, India</h4>
+                            <p>IUAC (Summer Project Intern - EDX analysis)</p>
+                        </div>
+                        <div class="hub-card glass-box" data-lat="11.0168" data-lng="76.9558">
+                            <span class="hub-num">H4</span>
+                            <h4>Coimbatore, India</h4>
+                            <p>Amrita University (Bachelors studies in Physics)</p>
+                        </div>
+                        <div class="hub-card glass-box" data-lat="13.0827" data-lng="80.2707">
+                            <span class="hub-num">H5</span>
+                            <h4>Chennai, India</h4>
+                            <p>Swamy's School (Secondary Certificate & Robotics studies)</p>
+                        </div>
+                        <div class="hub-card glass-box" data-lat="12.9716" data-lng="77.5946">
+                            <span class="hub-num">H6</span>
+                            <h4>Bangalore, India</h4>
+                            <p>SSERD (Research Intern - Exoplanet Stability Simulations)</p>
                         </div>
                     </div>
                 </div>
