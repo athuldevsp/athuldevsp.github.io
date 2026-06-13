@@ -54,6 +54,8 @@
         zoomFactor = Math.max(0.4, Math.min(6.0, zoomFactor + delta));
         if (projection) {
             projection.scale(baseRadius * zoomFactor);
+            path = d3.geoPath(projection, ctx);
+            console.log("Globe zoom factor adjusted:", zoomFactor);
         }
     }
 
@@ -341,6 +343,7 @@
             zoomFactor = Math.max(0.4, Math.min(6.0, initialZoomFactor * ratio));
             if (projection) {
                 projection.scale(baseRadius * zoomFactor);
+                path = d3.geoPath(projection, ctx);
             }
         } else if (isDragging && e.touches.length === 1) {
             const t = e.touches[0];
@@ -387,6 +390,7 @@
     function renderPlacesList() {
         const list = document.getElementById('places-list');
         if (!list) return;
+        console.log("Rendering " + places.length + " place cards in UI list.");
         list.innerHTML = places.map(p => `
             <div class="place-card">
                 <h4>${p.name}</h4>
@@ -398,8 +402,11 @@
 
     // --- Init ---
     async function init() {
+        console.log("Initializing globe: sizing canvas...");
         resize();
+        console.log("Loading world map and places CSV...");
         await Promise.all([loadWorld(), loadPlaces()]);
+        console.log("Loaded " + places.length + " places. Starting draw loop...");
         draw(0);
     }
 
