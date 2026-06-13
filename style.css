@@ -1032,14 +1032,14 @@ img { max-width: 100%; height: auto; }
 .pub-list {
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
+    gap: 0.6rem;
 }
 
 .pub-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 1.5rem 1.8rem;
+    padding: 0.7rem 1.2rem;
     backdrop-filter: blur(12px);
     transition: all 0.4s var(--ease-out);
 }
@@ -1052,10 +1052,10 @@ img { max-width: 100%; height: auto; }
 
 .pub-card h3 {
     font-family: var(--font-heading);
-    font-size: 1rem;
+    font-size: 0.92rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
-    line-height: 1.5;
+    margin-bottom: 0.2rem;
+    line-height: 1.4;
 }
 
 .pub-card h3 a {
@@ -1068,17 +1068,23 @@ img { max-width: 100%; height: auto; }
 }
 
 .pub-authors {
-    font-size: 0.82rem;
+    font-size: 0.76rem;
     color: var(--text-muted);
-    margin-bottom: 0.5rem;
-    line-height: 1.5;
+    margin-bottom: 0.2rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .pub-venue {
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     color: var(--accent-sky);
     font-style: italic;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .pub-meta {
