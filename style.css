@@ -1460,81 +1460,130 @@ img { max-width: 100%; height: auto; }
     border-radius: 10px;
 }
 
-/* ---------- Country Photo Gallery ---------- */
-.country-photos-section {
-    margin-top: 0.5rem;
-}
-
-.photo-upload-hint {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    padding: 0.75rem;
-    background: rgba(100, 255, 218, 0.02);
-    border: 1px dashed rgba(100, 255, 218, 0.12);
-    border-radius: var(--radius-sm);
-    margin: 0.5rem 0;
-    font-family: var(--font-mono);
-}
-
-.photo-upload-hint code {
-    color: var(--accent-aurora);
-    font-size: 0.7rem;
-}
-
-.country-photos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.country-photo {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    border-radius: var(--radius-sm);
+/* ---------- Country Video Pane ---------- */
+.country-video-pane {
+    margin-top: 1.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
-    transition: transform 0.2s var(--ease-out), border-color 0.2s;
-    cursor: pointer;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    animation: fadeSlideUp 0.4s var(--ease-out);
 }
 
-.country-photo:hover {
-    transform: scale(1.06);
-    border-color: var(--accent-aurora);
-    z-index: 2;
-    position: relative;
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Photo lightbox */
-.photo-lightbox {
-    position: fixed;
-    inset: 0;
-    background: rgba(5, 8, 18, 0.95);
+.video-pane-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.2rem;
+    background: rgba(100, 255, 218, 0.03);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.video-pane-icon {
+    color: var(--accent-aurora);
+    display: flex;
+    align-items: center;
+}
+
+#video-pane-title {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.video-pane-close {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
-    cursor: zoom-out;
-    backdrop-filter: blur(12px);
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: color 0.2s, border-color 0.2s;
+    line-height: 1;
+    padding: 0;
+}
+.video-pane-close:hover {
+    color: var(--accent-sunset);
+    border-color: var(--accent-sunset);
 }
 
-.photo-lightbox img {
-    max-width: 90vw;
-    max-height: 90vh;
-    border-radius: var(--radius-md);
-    box-shadow: 0 0 80px rgba(100, 255, 218, 0.08);
-    border: 1px solid var(--border-color);
-    object-fit: contain;
+.video-pane-body {
+    position: relative;
+    width: 100%;
+    background: #000;
+}
+
+.country-video-frame {
+    display: block;
+    width: 100%;
+    height: 420px;
+    border: none;
+}
+
+.country-video-player {
+    display: block;
+    width: 100%;
+    max-height: 420px;
+    background: #000;
+}
+
+.video-no-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 3rem 2rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.01);
+    text-align: center;
+}
+
+.video-no-link p {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.video-hint-text {
+    font-family: var(--font-mono);
+    font-size: 0.75rem !important;
+    color: var(--accent-aurora) !important;
+    opacity: 0.7;
+}
+
+.video-hint-text code {
+    color: var(--accent-warm);
+}
+
+@media (max-width: 768px) {
+    .country-video-frame,
+    .country-video-player {
+        height: 240px;
+    }
 }
 
 
+/* ---------- Responsive ---------- */
 @media (max-width: 992px) {
-    .travel-layout {
+    .travel-layout.has-selection {
         grid-template-columns: 1fr;
     }
 }
 
-/* ---------- Responsive ---------- */
 @media (max-width: 900px) {
     .hero-content {
         grid-template-columns: 1fr;

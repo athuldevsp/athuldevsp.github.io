@@ -38,7 +38,7 @@
     // Country Detail Map Zoom State
     let countryZoomTransform = d3.zoomIdentity;
     let countryZoom = null;
-    let photosManifest = {}; // Country photos manifest
+    let countryVideos = {}; // country key -> { label, url }
 
     // --- Name Normalization ---
     function normalizeCountryName(country) {
@@ -101,57 +101,102 @@
         }
     }
 
-    // --- Load Photos Manifest ---
-    async function loadPhotosManifest() {
+    // --- Load Country Videos CSV ---
+    async function loadCountryVideos() {
         try {
-            const resp = await fetch('data/photos.json?v=' + Date.now());
-            if (resp.ok) {
-                photosManifest = await resp.json();
+            const resp = await fetch('data/country_videos.csv?v=' + Date.now());
+            if (!resp.ok) return;
+            const text = await resp.text();
+            const lines = text.trim().split('\n');
+            // Header: country,label,video_url
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(',');
+                if (cols.length < 1) continue;
+                const country = cols[0].trim();
+                const label   = cols[1] ? cols[1].trim() : country;
+                // URL may contain commas (e.g. query params) — rejoin remaining cols
+                const url = cols.slice(2).join(',').trim();
+                if (country) countryVideos[country.toLowerCase()] = { label, url };
             }
         } catch (err) {
-            console.error('Failed to load photos manifest:', err);
+            console.error('Failed to load country videos CSV:', err);
         }
     }
 
-    // --- Render Country Photos ---
-    function renderCountryPhotos(normName) {
-        const section = document.getElementById('country-photos-section');
-        const grid = document.getElementById('country-photos-grid');
-        const hint = section ? section.querySelector('.photo-upload-hint') : null;
-        if (!section || !grid) return;
+    // --- Build embeddable URL from any share link ---
+    function buildEmbedUrl(rawUrl) {
+        if (!rawUrl) return null;
+        const u = rawUrl.trim();
+        if (!u) return null;
 
-        // Map normalized country names to manifest keys
-        const keyMap = {
-            'India': 'india',
-            'Germany': 'germany',
-            'Switzerland': 'switzerland',
-            'Iceland': 'iceland',
-            'France': 'france',
-            'Hungary': 'hungary',
-            'Netherlands': 'netherlands',
-            'Belgium': 'belgium',
-            'Austria': 'austria'
-        };
-        const key = keyMap[normName];
-        const photos = key && photosManifest[key] ? photosManifest[key] : [];
+        // YouTube watch → embed
+        const ytMatch = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+        if (ytMatch) return `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&mute=1&loop=1&playlist=${ytMatch[1]}&controls=1`;
 
-        section.style.display = 'block';
-        grid.innerHTML = '';
+        // Already a YouTube embed URL
+        if (u.includes('youtube.com/embed') || u.includes('youtube-nocookie.com/embed')) {
+            return u.includes('autoplay') ? u : u + (u.includes('?') ? '&' : '?') + 'autoplay=1&mute=1';
+        }
 
-        if (photos.length === 0) {
-            if (hint) hint.style.display = 'block';
+        // Google Photos share link — wrap in iframe (best-effort)
+        if (u.includes('photos.google.com') || u.includes('photos.app.goo.gl')) {
+            return u; // returned as-is; we use iframe with the share page
+        }
+
+        // Direct video file
+        if (/\.(mp4|webm|ogg)(\?|$)/i.test(u)) return u;
+
+        // Fallback: try as iframe
+        return u;
+    }
+
+    // --- Render Country Video Pane ---
+    function renderCountryVideo(normName, countryDisplayName) {
+        const pane    = document.getElementById('country-video-pane');
+        const area    = document.getElementById('video-embed-area');
+        const noLink  = document.getElementById('video-no-link');
+        const title   = document.getElementById('video-pane-title');
+        if (!pane || !area) return;
+
+        const key   = normName.toLowerCase();
+        const entry = countryVideos[key];
+        const rawUrl = entry ? entry.url : '';
+        const label  = entry ? entry.label : countryDisplayName;
+
+        if (title) title.textContent = label || countryDisplayName;
+        pane.style.display = 'block';
+        area.innerHTML = '';
+
+        const embedUrl = buildEmbedUrl(rawUrl);
+
+        if (!embedUrl) {
+            // No video linked
+            if (noLink) noLink.style.display = 'flex';
+            return;
+        }
+        if (noLink) noLink.style.display = 'none';
+
+        // Direct video file
+        if (/\.(mp4|webm|ogg)(\?|$)/i.test(embedUrl)) {
+            const vid = document.createElement('video');
+            vid.src = embedUrl;
+            vid.autoplay = true;
+            vid.muted = true;
+            vid.loop = true;
+            vid.controls = true;
+            vid.playsInline = true;
+            vid.className = 'country-video-player';
+            area.appendChild(vid);
+            vid.play().catch(() => {});
         } else {
-            if (hint) hint.style.display = 'none';
-            photos.forEach(photoPath => {
-                const img = document.createElement('img');
-                img.src = photoPath;
-                img.alt = normName + ' photo';
-                img.className = 'country-photo';
-                img.loading = 'lazy';
-                img.onerror = () => img.style.display = 'none';
-                img.addEventListener('click', () => openLightbox(photoPath, normName));
-                grid.appendChild(img);
-            });
+            // iframe (YouTube, Google Photos, etc.)
+            const frame = document.createElement('iframe');
+            frame.src = embedUrl;
+            frame.className = 'country-video-frame';
+            frame.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+            frame.allowFullscreen = true;
+            frame.setAttribute('loading', 'lazy');
+            area.appendChild(frame);
         }
     }
 
@@ -477,10 +522,9 @@
 
         // Update UI Panel elements
         document.getElementById('selected-country-name').innerText = countryName;
-        document.getElementById('selected-country-stats').innerText = `I have explored ${countryPlaces.length} ${countryPlaces.length === 1 ? 'place' : 'places'} inside ${countryName}.`;
+        document.getElementById('selected-country-stats').innerText = `${countryPlaces.length} ${countryPlaces.length === 1 ? 'location' : 'locations'} visited in ${countryName}.`;
 
         document.getElementById('country-map-container').style.display = 'block';
-        document.getElementById('places-list-header').style.display = 'block';
 
         // Reset D3 zoom state to identity before rendering the new country
         const mapCanvas = document.getElementById('country-map-canvas');
@@ -536,14 +580,13 @@
             }
         }
 
-        // Delay slightly to let the CSS display block apply and compute layout width
-        // Load photos for this country
-        renderCountryPhotos(normName);
+        // Show video pane for this country
+        renderCountryVideo(normName, countryName);
 
+        // Delay slightly to let the CSS display block apply and compute layout width
         setTimeout(() => {
             resize();
             renderCountryMap(renderFeature, countryPlaces);
-            renderCountryPlacesList(countryPlaces);
         }, 100);
     }
     window.selectCountryTest = selectCountry;
@@ -551,12 +594,15 @@
     function deselectCountry() {
         selectedCountry = null;
         const layout = document.querySelector('.travel-layout');
-        if (layout) {
-            layout.classList.remove('has-selection');
+        if (layout) layout.classList.remove('has-selection');
+        // Hide video pane and stop playback
+        const pane = document.getElementById('country-video-pane');
+        if (pane) {
+            pane.style.display = 'none';
+            const area = document.getElementById('video-embed-area');
+            if (area) area.innerHTML = ''; // stops video playback
         }
-        setTimeout(() => {
-            resize();
-        }, 100);
+        setTimeout(() => resize(), 100);
     }
 
     function renderCountryMap(countryFeature, countryPlaces) {
@@ -643,16 +689,7 @@
         }
     }
 
-    function renderCountryPlacesList(countryPlaces) {
-        const list = document.getElementById('places-list');
-        if (!list) return;
-        list.innerHTML = countryPlaces.map(p => `
-            <div class="place-card">
-                <h4>${p.name}</h4>
-                ${p.note ? `<div class="place-note">${p.note}</div>` : ''}
-            </div>
-        `).join('');
-    }
+    // renderCountryPlacesList removed — place names shown on map canvas
 
     // --- Mouse & Touch Event Bindings ---
     canvas.addEventListener('mousedown', (e) => {
@@ -832,20 +869,18 @@
         });
     });
 
-    // --- Photo Lightbox ---
-    function openLightbox(src, alt) {
-        const existing = document.querySelector('.photo-lightbox');
-        if (existing) existing.remove();
-
-        const lb = document.createElement('div');
-        lb.className = 'photo-lightbox';
-        lb.innerHTML = `<img src="${src}" alt="${alt}">`;
-        lb.addEventListener('click', () => lb.remove());
-        document.addEventListener('keydown', function onKey(e) {
-            if (e.key === 'Escape') { lb.remove(); document.removeEventListener('keydown', onKey); }
-        });
-        document.body.appendChild(lb);
-    }
+    // --- Video Pane Close Button ---
+    (function() {
+        const closeBtn = document.getElementById('video-pane-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                const pane = document.getElementById('country-video-pane');
+                const area = document.getElementById('video-embed-area');
+                if (pane) pane.style.display = 'none';
+                if (area) area.innerHTML = '';
+            });
+        }
+    })();
 
     function initCountryMapZoom() {
         const mapCanvas = document.getElementById('country-map-canvas');
@@ -870,7 +905,7 @@
         resize();
         initCountryMapZoom();
         console.log("Loading world map and places CSV...");
-        await Promise.all([loadWorld(), loadPlaces(), loadPhotosManifest()]);
+        await Promise.all([loadWorld(), loadPlaces(), loadCountryVideos()]);
         console.log("Loaded " + places.length + " places. Starting draw loop...");
         draw(0);
     }
