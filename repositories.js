@@ -2,35 +2,26 @@
    Repositories & CERN GitLab Activity Calendar Logic
    ============================================================ */
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     const reposGrid = document.getElementById('repos-grid');
     const activityGrid = document.getElementById('activity-grid');
 
     if (!reposGrid || !activityGrid) return;
 
-    try {
-        // --- 1. Load Projects List ---
-        const projectsResponse = await fetch('data/gitlab_projects.json');
-        if (projectsResponse.ok) {
-            const projects = await projectsResponse.json();
-            renderProjects(projects);
-        } else {
-            reposGrid.innerHTML = '<div class="error-msg">Failed to load projects list.</div>';
-        }
+    // Load from window variables (pre-loaded via script tags to bypass CORS on file:// protocol)
+    const projects = window.gitlabProjects || [];
+    const activity = window.gitlabActivity || [];
 
-        // --- 2. Load GitLab Activity & Build Grid ---
-        const activityResponse = await fetch('data/gitlab_activity.json');
-        if (activityResponse.ok) {
-            const activity = await activityResponse.json();
-            buildContributionGrid(activity);
-        } else {
-            activityGrid.innerHTML = '<div class="error-msg">Failed to load activity details.</div>';
-        }
+    // Render projects list
+    renderProjects(projects);
 
-    } catch (err) {
-        console.error('Error loading repositories data:', err);
-        reposGrid.innerHTML = `<div class="error-msg">Error: ${err.message}</div>`;
-    }
+    // Render activity calendar
+    buildContributionGrid(activity);
+    
+    // Recalculate grid on resize to fit perfectly without scrollbars
+    window.addEventListener('resize', () => {
+        buildContributionGrid(activity);
+    });
 });
 
 // ---- Render GitLab projects ----
@@ -38,8 +29,8 @@ function renderProjects(projects) {
     const reposGrid = document.getElementById('repos-grid');
     if (!reposGrid) return;
 
-    if (projects.length === 0) {
-        reposGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No public projects found.</p>';
+    if (!projects || projects.length === 0) {
+        reposGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">No public repositories found.</p>';
         return;
     }
 
@@ -79,6 +70,11 @@ function buildContributionGrid(events) {
     const activityMonths = document.getElementById('activity-months');
     if (!activityGrid) return;
 
+    if (!events || events.length === 0) {
+        activityGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">No activity data found.</p>';
+        return;
+    }
+
     // 1. Group events by date (YYYY-MM-DD)
     const counts = {};
     let minDate = new Date(); // Fallback to today
@@ -97,25 +93,39 @@ function buildContributionGrid(events) {
         }
     });
 
-    // Determine start date (Sunday of the week of the oldest event)
-    const start = new Date(hasEvents ? minDate : new Date());
-    const startDay = start.getDay(); // 0: Sunday, 6: Saturday
-    start.setDate(start.getDate() - startDay); // Go back to Sunday
-    start.setHours(0, 0, 0, 0);
+    // Determine absolute oldest date
+    const absoluteStart = new Date(hasEvents ? minDate : new Date());
+    const startDay = absoluteStart.getDay();
+    absoluteStart.setDate(absoluteStart.getDate() - startDay); // Sunday before minDate
+    absoluteStart.setHours(0, 0, 0, 0);
 
-    // Determine end date (Saturday of the current week)
     const end = new Date();
     const endDay = end.getDay();
-    end.setDate(end.getDate() + (6 - endDay)); // Go forward to Saturday
+    end.setDate(end.getDate() + (6 - endDay)); // Saturday of current week
     end.setHours(23, 59, 59, 999);
 
-    // Calculate number of weeks/cells
-    const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const numWeeks = Math.ceil(diffDays / 7);
+    // Calculate maximum available weeks
+    const totalDiffTime = Math.abs(end - absoluteStart);
+    const totalDiffDays = Math.ceil(totalDiffTime / (1000 * 60 * 60 * 24));
+    const totalAvailableWeeks = Math.ceil(totalDiffDays / 7);
+
+    // Calculate how many weeks can fit in the container width
+    const containerWidth = activityGrid.parentElement.offsetWidth || 1100;
+    const colWidth = 13; // 10px cell + 3px gap
+    const fitWeeks = Math.floor((containerWidth - 10) / colWidth); // Subtract small offset for padding
+    
+    // Choose weeks to show (fit within width, not exceeding available data)
+    const numWeeks = Math.max(12, Math.min(fitWeeks, totalAvailableWeeks)); 
     const daysToShow = numWeeks * 7;
 
-    // Apply dynamic grid template column counts
+    // Adjust start date to only show the last numWeeks
+    const start = new Date(end);
+    start.setDate(end.getDate() - (daysToShow - 1));
+    const startAdjustDay = start.getDay();
+    start.setDate(start.getDate() - startAdjustDay); // Align to Sunday
+    start.setHours(0, 0, 0, 0);
+
+    // Apply grid template column counts dynamically
     activityGrid.style.gridTemplateColumns = `repeat(${numWeeks}, 10px)`;
     if (activityMonths) {
         activityMonths.style.gridTemplateColumns = `repeat(${numWeeks}, 10px)`;
@@ -141,19 +151,22 @@ function buildContributionGrid(events) {
         }
     }
 
-    // Filter labels to prevent overlaps (minimum gap of 5 weeks)
+    // Filter labels to prevent overlaps (minimum gap of 6 weeks)
     if (activityMonths) {
         const filteredLabels = [];
         let lastCol = -10;
         monthLabels.forEach(label => {
-            if (label.column - lastCol >= 5) {
+            if (label.column - lastCol >= 6) {
                 filteredLabels.push(label);
                 lastCol = label.column;
             }
         });
         
         activityMonths.innerHTML = filteredLabels.map(l => {
-            return `<span style="grid-column: ${l.column};">${l.text}</span>`;
+            return `
+                <span class="activity-month-label" style="grid-row: 1; grid-column: ${l.column} / span 6;">${l.text}</span>
+                <span class="activity-tick" style="grid-row: 2; grid-column: ${l.column};"></span>
+            `;
         }).join('');
     }
 

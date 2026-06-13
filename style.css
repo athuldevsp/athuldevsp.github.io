@@ -1766,16 +1766,39 @@ img { max-width: 100%; height: auto; }
 }
 
 .activity-grid-container {
-    overflow-x: auto;
+    overflow-x: hidden;
     width: 100%;
     padding-bottom: 0.5rem;
+}
+
+.activity-months {
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: 2px 3px;
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+    width: max-content;
+}
+
+.activity-month-label {
+    white-space: nowrap;
+    overflow: visible;
+    color: var(--text-secondary);
+}
+
+.activity-tick {
+    width: 1px;
+    height: 4px;
+    background: rgba(100, 255, 218, 0.3);
+    justify-self: center;
 }
 
 .activity-grid {
     display: grid;
     grid-auto-flow: column;
     grid-template-rows: repeat(7, 10px);
-    grid-template-columns: repeat(53, 10px);
     gap: 3px;
     width: max-content;
 }
