@@ -727,7 +727,7 @@
         if (!isDragging) return;
         const dx = e.clientX - dragStart.x;
         const dy = e.clientY - dragStart.y;
-        const sensitivity = 0.4;
+        const sensitivity = 0.4 / zoomFactor;
         currentRotation[0] = rotationStart[0] + dx * sensitivity;
         currentRotation[1] = Math.max(-60, Math.min(60, rotationStart[1] - dy * sensitivity));
         projection.rotate(currentRotation);
@@ -854,8 +854,9 @@
             const t = e.touches[0];
             const dx = t.clientX - dragStart.x;
             const dy = t.clientY - dragStart.y;
-            currentRotation[0] = rotationStart[0] + dx * 0.4;
-            currentRotation[1] = Math.max(-60, Math.min(60, rotationStart[1] - dy * 0.4));
+            const sensitivity = 0.4 / zoomFactor;
+            currentRotation[0] = rotationStart[0] + dx * sensitivity;
+            currentRotation[1] = Math.max(-60, Math.min(60, rotationStart[1] - dy * sensitivity));
             projection.rotate(currentRotation);
         }
     }, { passive: true });
