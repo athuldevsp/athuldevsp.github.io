@@ -44,33 +44,55 @@
 
     <!-- Globe -->
     <section class="travel-section">
-        <div class="section-container travel-layout">
-            <!-- Left side: Globe -->
-            <div class="globe-column">
-                <div class="globe-container reveal-up delay-2">
-                    <canvas id="globe-canvas"></canvas>
-                    <div class="globe-controls">
-                        <button class="active" data-action="rotate">Auto-Rotate</button>
-                        <button data-action="drag">Drag to Explore</button>
-                        <button data-action="zoom-in" title="Zoom In">Zoom In (+)</button>
-                        <button data-action="zoom-out" title="Zoom Out">Zoom Out (−)</button>
-                    </div>
+        <div class="section-container">
+            <!-- Travel Stats Bar -->
+            <div class="travel-stats-bar reveal-up delay-1">
+                <div class="stat-item">
+                    <span class="stat-value" id="stats-countries">0</span>
+                    <span class="stat-label">Countries Visited</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="stats-cities">0</span>
+                    <span class="stat-label">Cities Explored</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="stats-northmost">-</span>
+                    <span class="stat-label">Northernmost Visited</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="stats-southmost">-</span>
+                    <span class="stat-label">Southernmost Visited</span>
                 </div>
             </div>
 
-            <!-- Right side: Detail Map & Info -->
-            <div class="detail-column reveal-up delay-3">
-                <div class="detail-card">
-                    <div class="detail-header">
-                        <h3 id="selected-country-name">Select a Country</h3>
-                        <p id="selected-country-stats">Click on a highlighted country on the globe to explore cities visited.</p>
+            <div class="travel-layout">
+                <!-- Left side: Globe -->
+                <div class="globe-column">
+                    <div class="globe-container reveal-up delay-2">
+                        <canvas id="globe-canvas"></canvas>
+                        <div class="globe-controls">
+                            <button class="active" data-action="rotate">Auto-Rotate</button>
+                            <button data-action="drag">Drag to Explore</button>
+                            <button data-action="zoom-in" title="Zoom In">Zoom In (+)</button>
+                            <button data-action="zoom-out" title="Zoom Out">Zoom Out (−)</button>
+                        </div>
                     </div>
-                    <div class="country-map-container" id="country-map-container" style="display: none;">
-                        <canvas id="country-map-canvas"></canvas>
-                    </div>
-                    <div class="detail-places-header" style="display: none;" id="places-list-header">Visited Cities</div>
-                    <div class="places-list" id="places-list">
-                        <!-- Populated dynamically -->
+                </div>
+
+                <!-- Right side: Detail Map & Info -->
+                <div class="detail-column reveal-up delay-3">
+                    <div class="detail-card">
+                        <div class="detail-header">
+                            <h3 id="selected-country-name">Select a Country</h3>
+                            <p id="selected-country-stats">Click on a highlighted country on the globe to explore cities visited.</p>
+                        </div>
+                        <div class="country-map-container" id="country-map-container" style="display: none;">
+                            <canvas id="country-map-canvas"></canvas>
+                        </div>
+                        <div class="detail-places-header" style="display: none;" id="places-list-header">Visited Cities</div>
+                        <div class="places-list" id="places-list">
+                            <!-- Populated dynamically -->
+                        </div>
                     </div>
                 </div>
             </div>

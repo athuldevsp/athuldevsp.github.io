@@ -149,6 +149,30 @@
                 { name: 'Reykjavík', lat: 64.1466, lng: -21.9426, country: 'Iceland', note: 'Trip to Iceland' }
             ];
         }
+        calculateStats();
+    }
+
+    function calculateStats() {
+        if (!places.length) return;
+
+        const uniqueCountries = new Set(places.map(p => normalizeCountryName(p.country)));
+        const countriesEl = document.getElementById('stats-countries');
+        if (countriesEl) countriesEl.innerText = uniqueCountries.size;
+
+        const citiesEl = document.getElementById('stats-cities');
+        if (citiesEl) citiesEl.innerText = places.length;
+
+        const northernmost = places.reduce((max, p) => p.lat > max.lat ? p : max, places[0]);
+        const northEl = document.getElementById('stats-northmost');
+        if (northEl) {
+            northEl.innerHTML = `${northernmost.name} (${Math.round(northernmost.lat * 10) / 10}°N)`;
+        }
+
+        const southernmost = places.reduce((min, p) => p.lat < min.lat ? p : min, places[0]);
+        const southEl = document.getElementById('stats-southmost');
+        if (southEl) {
+            southEl.innerHTML = `${southernmost.name} (${Math.round(southernmost.lat * 10) / 10}°N)`;
+        }
     }
 
     // --- Drawing loop ---

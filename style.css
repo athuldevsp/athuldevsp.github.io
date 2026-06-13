@@ -1271,6 +1271,54 @@ img { max-width: 100%; height: auto; }
     color: var(--text-muted);
 }
 
+/* --- Travel Stats Bar --- */
+.travel-stats-bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    background: rgba(22, 32, 65, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 2rem;
+    margin-bottom: 2.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+}
+
+.stat-value {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent-aurora);
+    margin-bottom: 0.2rem;
+}
+
+.stat-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+    .travel-stats-bar {
+        flex-direction: column;
+        gap: 1.25rem;
+        padding: 1.5rem;
+    }
+    .stat-item:not(:last-child) {
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.75rem;
+    }
+}
+
 /* --- Travel split layout --- */
 .travel-layout {
     display: grid;
