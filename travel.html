@@ -44,24 +44,35 @@
 
     <!-- Globe -->
     <section class="travel-section">
-        <div class="section-container">
-            <div class="globe-container reveal-up delay-2">
-                <canvas id="globe-canvas"></canvas>
-                <div class="globe-controls">
-                    <button class="active" data-action="rotate">Auto-Rotate</button>
-                    <button data-action="drag">Drag to Explore</button>
-                    <button data-action="zoom-in" title="Zoom In">Zoom In (+)</button>
-                    <button data-action="zoom-out" title="Zoom Out">Zoom Out (−)</button>
+        <div class="section-container travel-layout">
+            <!-- Left side: Globe -->
+            <div class="globe-column">
+                <div class="globe-container reveal-up delay-2">
+                    <canvas id="globe-canvas"></canvas>
+                    <div class="globe-controls">
+                        <button class="active" data-action="rotate">Auto-Rotate</button>
+                        <button data-action="drag">Drag to Explore</button>
+                        <button data-action="zoom-in" title="Zoom In">Zoom In (+)</button>
+                        <button data-action="zoom-out" title="Zoom Out">Zoom Out (−)</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Places List -->
-            <h3 class="subsection-title reveal-up delay-3">Places Visited</h3>
-            <p class="page-subtitle reveal-up delay-3" style="margin-bottom: 1.5rem; font-size: 0.85rem;">
-                Locations are loaded from <code>data/places.csv</code> — add more rows to update the globe.
-            </p>
-            <div class="places-list reveal-up delay-4" id="places-list">
-                <!-- Populated by JS -->
+            <!-- Right side: Detail Map & Info -->
+            <div class="detail-column reveal-up delay-3">
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <h3 id="selected-country-name">Select a Country</h3>
+                        <p id="selected-country-stats">Click on a highlighted country on the globe to explore cities visited.</p>
+                    </div>
+                    <div class="country-map-container" id="country-map-container" style="display: none;">
+                        <canvas id="country-map-canvas"></canvas>
+                    </div>
+                    <div class="detail-places-header" style="display: none;" id="places-list-header">Visited Cities</div>
+                    <div class="places-list" id="places-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
             </div>
         </div>
     </section>

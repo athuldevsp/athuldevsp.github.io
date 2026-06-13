@@ -1,8 +1,6 @@
 /* ============================================================
    Interactive Animated Globe — D3-geo + Canvas
-   Uses proper orthographic projection with Natural Earth 110m
-   topojson world map data for accurate country rendering.
-   Places are loaded from data/places.csv.
+   Restructured for Country-Level detail on split layout.
    ============================================================ */
 
 (function () {
@@ -27,6 +25,27 @@
     let baseRadius = 0;
     let initialTouchDistance = null;
     let initialZoomFactor = 1.0;
+
+    // Click tracking state
+    let clickStart = { x: 0, y: 0 };
+    let clickTime = 0;
+    let selectedCountry = null;
+
+    // --- Name Normalization ---
+    function normalizeCountryName(country) {
+        if (!country) return '';
+        const c = country.toLowerCase();
+        if (c.includes('india')) return 'India';
+        if (c.includes('germany') || c.includes('deutschland')) return 'Germany';
+        if (c.includes('switzerland') || c.includes('schweiz') || c.includes('suisse') || c.includes('svizzera')) return 'Switzerland';
+        if (c.includes('iceland') || c.includes('ísland')) return 'Iceland';
+        if (c.includes('france')) return 'France';
+        if (c.includes('hungary') || c.includes('magyarország') || c.includes('magyarorszag')) return 'Hungary';
+        if (c.includes('netherlands') || c.includes('nederland')) return 'Netherlands';
+        if (c.includes('belgium') || c.includes('belgië') || c.includes('belgique') || c.includes('belgien')) return 'Belgium';
+        if (c.includes('austria') || c.includes('österreich') || c.includes('osterreich')) return 'Austria';
+        return country;
+    }
 
     // --- Sizing ---
     function resize() {
@@ -63,6 +82,7 @@
     async function loadWorld() {
         try {
             const resp = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+            if (!resp.ok) throw new Error("Failed to download world atlas data");
             const topo = await resp.json();
             worldData = {
                 land: topojson.feature(topo, topo.objects.land),
@@ -77,15 +97,12 @@
     // --- Load Places from CSV ---
     async function loadPlaces() {
         try {
-            // Fetch with cache-buster to prevent stale responses
             const resp = await fetch('data/places.csv?v=' + Date.now());
-            if (!resp.ok) {
-                throw new Error(`HTTP error! status: ${resp.status}`);
-            }
+            if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
             const text = await resp.text();
             const lines = text.trim().split('\n');
 
-            // Simple parser that respects quotes
+            // Quotes-aware CSV parsing helper
             const parseCSVLine = (line) => {
                 let cols = [];
                 let insideQuote = false;
@@ -105,7 +122,6 @@
                 return cols.map(s => s.replace(/^"|"$/g, '').trim());
             };
 
-            // Skip header
             for (let i = 1; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
@@ -130,12 +146,12 @@
                 { name: 'Göttingen', lat: 51.5339, lng: 9.9356, country: 'Germany', note: 'PhD & Masters' },
                 { name: 'Geneva (CERN)', lat: 46.2044, lng: 6.1432, country: 'Switzerland', note: 'ATLAS Experiment' },
                 { name: 'Chennai', lat: 13.0827, lng: 80.2707, country: 'India', note: 'Hometown' },
+                { name: 'Reykjavík', lat: 64.1466, lng: -21.9426, country: 'Iceland', note: 'Trip to Iceland' }
             ];
         }
-        renderPlacesList();
     }
 
-    // --- Drawing ---
+    // --- Drawing loop ---
     function draw(time) {
         ctx.clearRect(0, 0, width, height);
 
@@ -153,8 +169,7 @@
             drawBorders();
         }
         drawGraticule();
-        drawArcs();
-        drawPlaceMarkers(time);
+        drawCountryLabels();
 
         animFrame = requestAnimationFrame(draw);
     }
@@ -185,13 +200,39 @@
     }
 
     function drawLand() {
+        if (!worldData) return;
+
+        // Draw default land first
         ctx.beginPath();
         path(worldData.land);
-        ctx.fillStyle = 'rgba(100, 255, 218, 0.06)';
+        ctx.fillStyle = 'rgba(100, 255, 218, 0.04)';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.18)';
-        ctx.lineWidth = 0.6;
+        ctx.strokeStyle = 'rgba(100, 255, 218, 0.12)';
+        ctx.lineWidth = 0.5;
         ctx.stroke();
+
+        // Highlight visited countries
+        for (const feature of worldData.countries.features) {
+            const countryName = normalizeCountryName(feature.properties.name);
+            const hasVisited = places.some(p => normalizeCountryName(p.country) === countryName);
+
+            if (hasVisited) {
+                ctx.beginPath();
+                path(feature);
+
+                // Highlight selected country differently
+                if (selectedCountry && selectedCountry.id === feature.id) {
+                    ctx.fillStyle = 'rgba(255, 169, 77, 0.25)';
+                } else {
+                    ctx.fillStyle = 'rgba(100, 255, 218, 0.18)';
+                }
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(100, 255, 218, 0.35)';
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
+            }
+        }
     }
 
     function drawBorders() {
@@ -206,89 +247,174 @@
         const graticule = d3.geoGraticule().step([20, 20])();
         ctx.beginPath();
         path(graticule);
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.04)';
+        ctx.strokeStyle = 'rgba(100, 255, 218, 0.03)';
         ctx.lineWidth = 0.4;
         ctx.stroke();
     }
 
-    function drawArcs() {
-        if (places.length < 2) return;
+    function drawCountryLabels() {
+        // Only show country labels on the globe as you zoom in (zoomFactor >= 1.4)
+        if (zoomFactor < 1.4 || !worldData) return;
 
-        ctx.strokeStyle = 'rgba(255, 169, 77, 0.15)';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 6]);
+        ctx.font = '10px "Space Grotesk", sans-serif';
+        ctx.fillStyle = 'rgba(232, 234, 246, 0.75)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
 
-        for (let i = 0; i < places.length - 1; i++) {
-            const a = places[i];
-            const b = places[i + 1];
-            const line = {
-                type: 'LineString',
-                coordinates: [[a.lng, a.lat], [b.lng, b.lat]]
-            };
-            ctx.beginPath();
-            path(line);
-            ctx.stroke();
+        for (const feature of worldData.countries.features) {
+            const countryName = normalizeCountryName(feature.properties.name);
+            const hasVisited = places.some(p => normalizeCountryName(p.country) === countryName);
+
+            if (hasVisited) {
+                const centroid = d3.geoCentroid(feature);
+                const coords = projection(centroid);
+
+                if (coords) {
+                    const d = d3.geoDistance(centroid, projection.invert([width / 2, height / 2]));
+                    // Render label only if on the visible hemisphere
+                    if (d < Math.PI / 2) {
+                        const [px, py] = coords;
+                        ctx.fillStyle = 'rgba(10, 14, 26, 0.5)';
+                        const textW = ctx.measureText(feature.properties.name).width;
+                        ctx.fillRect(px - textW/2 - 4, py - 6, textW + 8, 12);
+
+                        ctx.fillStyle = 'rgba(232, 234, 246, 0.9)';
+                        ctx.fillText(feature.properties.name, px, py);
+                    }
+                }
+            }
         }
-        ctx.setLineDash([]);
     }
 
-    function drawPlaceMarkers(time) {
-        for (const place of places) {
-            const coords = projection([place.lng, place.lat]);
+    // --- Interactive Globe Clicks ---
+    function handleGlobeClick(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const cx = width / 2;
+        const cy = height / 2;
+        const r = projection.scale();
+        const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+        if (dist > r) return; // Clicked outside globe sphere
+
+        const coords = projection.invert([x, y]);
+        if (!coords) return;
+
+        // Check if clicked point is on visible hemisphere
+        const d = d3.geoDistance(coords, projection.invert([width / 2, height / 2]));
+        if (d > Math.PI / 2) return;
+
+        if (worldData && worldData.countries) {
+            const clickedFeature = worldData.countries.features.find(f => d3.geoContains(f, coords));
+            if (clickedFeature) {
+                const countryName = normalizeCountryName(clickedFeature.properties.name);
+                const hasVisited = places.some(p => normalizeCountryName(p.country) === countryName);
+                if (hasVisited) {
+                    selectCountry(clickedFeature);
+                }
+            }
+        }
+    }
+
+    // --- Selected Country Operations ---
+    function selectCountry(countryFeature) {
+        selectedCountry = countryFeature;
+        const countryName = countryFeature.properties.name;
+        const normName = normalizeCountryName(countryName);
+
+        // Filter visited cities
+        const countryPlaces = places.filter(p => normalizeCountryName(p.country) === normName);
+
+        // Update UI Panel elements
+        document.getElementById('selected-country-name').innerText = countryName;
+        document.getElementById('selected-country-stats').innerText = `You have explored ${countryPlaces.length} cities/regions inside ${countryName}.`;
+
+        document.getElementById('country-map-container').style.display = 'block';
+        document.getElementById('places-list-header').style.display = 'block';
+
+        // Render 2D Mercator projection country detail map
+        renderCountryMap(countryFeature, countryPlaces);
+
+        // Render places cards inside detail card
+        renderCountryPlacesList(countryPlaces);
+    }
+
+    function renderCountryMap(countryFeature, countryPlaces) {
+        const mapCanvas = document.getElementById('country-map-canvas');
+        if (!mapCanvas) return;
+        const mctx = mapCanvas.getContext('2d');
+        const mrect = mapCanvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        
+        mapCanvas.width = mrect.width * dpr;
+        mapCanvas.height = mrect.height * dpr;
+        mapCanvas.style.width = mrect.width + 'px';
+        mapCanvas.style.height = mrect.height + 'px';
+        mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        mctx.clearRect(0, 0, mrect.width, mrect.height);
+
+        // Setup country fit Mercator projection
+        const mProjection = d3.geoMercator()
+            .fitSize([mrect.width - 40, mrect.height - 40], countryFeature)
+            .translate([mrect.width / 2, mrect.height / 2]);
+        const mPath = d3.geoPath(mProjection, mctx);
+
+        // Draw country shape
+        mctx.beginPath();
+        mPath(countryFeature);
+        mctx.fillStyle = 'rgba(100, 255, 218, 0.08)';
+        mctx.fill();
+        mctx.strokeStyle = 'rgba(100, 255, 218, 0.4)';
+        mctx.lineWidth = 1.5;
+        mctx.stroke();
+
+        // Plot cities/markers
+        for (const place of countryPlaces) {
+            const coords = mProjection([place.lng, place.lat]);
             if (!coords) continue;
-
-            // Check if point is on the visible hemisphere
-            const d = d3.geoDistance(
-                [place.lng, place.lat],
-                projection.invert([width / 2, height / 2])
-            );
-            if (d > Math.PI / 2) continue;
-
             const [px, py] = coords;
-            const pulse = Math.sin(time / 500 + place.lat * 0.1) * 0.35 + 0.65;
 
-            // Glow halo
-            const grad = ctx.createRadialGradient(px, py, 0, px, py, 16);
-            grad.addColorStop(0, `rgba(255, 169, 77, ${0.5 * pulse})`);
-            grad.addColorStop(0.4, `rgba(255, 107, 107, ${0.15 * pulse})`);
-            grad.addColorStop(1, 'transparent');
-            ctx.beginPath();
-            ctx.arc(px, py, 16, 0, Math.PI * 2);
-            ctx.fillStyle = grad;
-            ctx.fill();
+            // Outer glow halo
+            mctx.beginPath();
+            mctx.arc(px, py, 8, 0, Math.PI * 2);
+            mctx.fillStyle = 'rgba(255, 169, 77, 0.25)';
+            mctx.fill();
 
             // Core dot
-            const dotR = 3.5 * pulse + 1.5;
-            ctx.beginPath();
-            ctx.arc(px, py, dotR, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 169, 77, 0.95)`;
-            ctx.fill();
+            mctx.beginPath();
+            mctx.arc(px, py, 3.5, 0, Math.PI * 2);
+            mctx.fillStyle = 'rgba(255, 169, 77, 0.9)';
+            mctx.fill();
 
-            // White center
-            ctx.beginPath();
-            ctx.arc(px, py, dotR * 0.4, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            ctx.fill();
+            // Text label
+            mctx.font = '10px "Space Grotesk", sans-serif';
+            mctx.fillStyle = 'rgba(232, 234, 246, 0.85)';
+            mctx.textAlign = 'center';
+            mctx.textBaseline = 'top';
 
-            // Label
-            ctx.font = '12px "Space Grotesk", sans-serif';
-            ctx.fillStyle = 'rgba(232, 234, 246, 0.85)';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-
-            // Background for label
-            const textW = ctx.measureText(place.name).width;
-            ctx.fillStyle = 'rgba(10, 14, 26, 0.6)';
-            ctx.fillRect(px + dotR + 6, py - 8, textW + 8, 16);
-
-            ctx.fillStyle = 'rgba(232, 234, 246, 0.9)';
-            ctx.fillText(place.name, px + dotR + 10, py);
+            // Check boundaries to avoid labels overlapping dots
+            mctx.fillText(place.name, px, py + 6);
         }
     }
 
-    // --- Drag & Zoom Interaction ---
+    function renderCountryPlacesList(countryPlaces) {
+        const list = document.getElementById('places-list');
+        if (!list) return;
+        list.innerHTML = countryPlaces.map(p => `
+            <div class="place-card">
+                <h4>${p.name}</h4>
+                ${p.note ? `<div class="place-note">${p.note}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    // --- Drag & Zoom Mouse Event Bindings ---
     canvas.addEventListener('mousedown', (e) => {
         isDragging = true;
+        clickStart = { x: e.clientX, y: e.clientY };
+        clickTime = Date.now();
         dragStart = { x: e.clientX, y: e.clientY };
         rotationStart = [...currentRotation];
         canvas.style.cursor = 'grabbing';
@@ -304,9 +430,17 @@
         projection.rotate(currentRotation);
     });
 
-    window.addEventListener('mouseup', () => {
+    window.addEventListener('mouseup', (e) => {
         isDragging = false;
         canvas.style.cursor = 'grab';
+
+        // Perform click detection
+        const dx = e.clientX - clickStart.x;
+        const dy = e.clientY - clickStart.y;
+        const dt = Date.now() - clickTime;
+        if (Math.sqrt(dx * dx + dy * dy) < 5 && dt < 300) {
+            handleGlobeClick(e);
+        }
     });
 
     // Scroll Zoom
@@ -316,7 +450,7 @@
         adjustZoom(delta);
     }, { passive: false });
 
-    // Touch and Pinch-to-Zoom Helper
+    // Touch and Pinch-to-Zoom
     function getTouchDistance(touches) {
         const dx = touches[0].clientX - touches[1].clientX;
         const dy = touches[0].clientY - touches[1].clientY;
@@ -386,20 +520,6 @@
         });
     });
 
-    // --- Render place cards ---
-    function renderPlacesList() {
-        const list = document.getElementById('places-list');
-        if (!list) return;
-        console.log("Rendering " + places.length + " place cards in UI list.");
-        list.innerHTML = places.map(p => `
-            <div class="place-card">
-                <h4>${p.name}</h4>
-                ${p.country ? `<div class="place-country">${p.country}</div>` : ''}
-                ${p.note ? `<div class="place-note">${p.note}</div>` : ''}
-            </div>
-        `).join('');
-    }
-
     // --- Init ---
     async function init() {
         console.log("Initializing globe: sizing canvas...");
@@ -407,6 +527,15 @@
         console.log("Loading world map and places CSV...");
         await Promise.all([loadWorld(), loadPlaces()]);
         console.log("Loaded " + places.length + " places. Starting draw loop...");
+        
+        // Select India by default if present
+        if (worldData && worldData.countries) {
+            const defaultCountry = worldData.countries.features.find(f => f.properties.name === "India");
+            if (defaultCountry) {
+                selectCountry(defaultCountry);
+            }
+        }
+        
         draw(0);
     }
 
@@ -414,6 +543,10 @@
         cancelAnimationFrame(animFrame);
         resize();
         draw(0);
+        if (selectedCountry) {
+            const countryPlaces = places.filter(p => normalizeCountryName(p.country) === normalizeCountryName(selectedCountry.properties.name));
+            renderCountryMap(selectedCountry, countryPlaces);
+        }
     });
 
     init();

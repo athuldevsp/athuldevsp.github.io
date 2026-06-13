@@ -1271,6 +1271,110 @@ img { max-width: 100%; height: auto; }
     color: var(--text-muted);
 }
 
+/* --- Travel split layout --- */
+.travel-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 2rem;
+    align-items: start;
+    margin-bottom: 3rem;
+}
+
+.globe-column {
+    width: 100%;
+}
+
+.detail-column {
+    width: 100%;
+}
+
+.detail-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.detail-header h3 {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent-aurora);
+    margin-bottom: 0.25rem;
+}
+
+.detail-header p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.country-map-container {
+    width: 100%;
+    height: 250px;
+    background: rgba(8, 12, 28, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+}
+
+#country-map-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.detail-places-header {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.detail-column .places-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.detail-column .place-card {
+    padding: 0.9rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.detail-column .place-card h4 {
+    font-size: 0.88rem;
+    margin-bottom: 0.2rem;
+}
+
+/* Scrollbar styles for the details list */
+.detail-column .places-list::-webkit-scrollbar {
+    width: 5px;
+}
+.detail-column .places-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.01);
+}
+.detail-column .places-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+
+@media (max-width: 992px) {
+    .travel-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
     .hero-content {
