@@ -287,11 +287,16 @@
                     const lat = parseFloat(cols[1]);
                     const lng = parseFloat(cols[2]);
                     if (!isNaN(lat) && !isNaN(lng)) {
+                        const note = cols[4] || '';
+                        // Extract record count from note, e.g. "Visited during timeline history (123 records)"
+                        const countMatch = note.match(/(\d+)\s+record/);
+                        const records = countMatch ? parseInt(countMatch[1], 10) : 1;
                         places.push({
                             name: cols[0],
                             lat, lng,
                             country: cols[3] || '',
-                            note: cols[4] || ''
+                            note,
+                            records
                         });
                     }
                 }
@@ -659,54 +664,89 @@
         mctx.fillStyle = 'rgba(100, 255, 218, 0.08)';
         mctx.fill();
         mctx.strokeStyle = 'rgba(100, 255, 218, 0.4)';
-        mctx.lineWidth = 1.5 / countryZoomTransform.k; // Constant border thickness on screen
+        mctx.lineWidth = 1.5 / countryZoomTransform.k;
         mctx.stroke();
         
         mctx.restore();
 
-        // Plot cities/markers as a density heatmap
+        if (!countryPlaces.length) return;
+
+        // --- Heatmap: scale glow by log of record count ---
+        // Compute log-scale normaliser across all places in this country
+        const maxRecords = Math.max(...countryPlaces.map(p => p.records || 1));
+        const logMax = Math.log1p(maxRecords);
+
+        // Two-pass rendering: glows first (additive blending effect), then core dots on top
+        mctx.globalCompositeOperation = 'source-over';
+
+        // Pass 1 — heatmap glow blobs
         for (const place of countryPlaces) {
             const coords = mProjection([place.lng, place.lat]);
             if (!coords) continue;
-            
-            // Project coordinate, then apply D3 zoom transformation manually
             const [x, y] = coords;
             const px = x * countryZoomTransform.k + countryZoomTransform.x;
             const py = y * countryZoomTransform.k + countryZoomTransform.y;
+            if (px < -100 || px > mapWidth + 100 || py < -100 || py > mapHeight + 100) continue;
 
-            // Avoid drawing markers way out of canvas bounds to optimize
-            if (px < -50 || px > mapWidth + 50 || py < -50 || py > mapHeight + 50) continue;
+            const records = place.records || 1;
+            const t = Math.log1p(records) / logMax; // 0..1 normalised on log scale
 
-            // Heatmap density glow (larger, semi-transparent overlapping circles)
-            const glowRadius = 24;
+            // Radius: from 14px (t=0) to 70px (t=1), scaled by zoom
+            const baseGlow = 14 + t * 56;
+            const glowRadius = baseGlow * countryZoomTransform.k;
+
+            // Colour: interpolate warm palette — teal (cold) → amber → hot coral
+            // Use a three-stop heatmap: teal at low, amber at mid, coral-red at high
+            const r = Math.round(100 + t * 155);        // 100 → 255
+            const g = Math.round(255 - t * 186);        // 255 → 69
+            const b = Math.round(218 - t * 218);        // 218 → 0
+            const coreAlpha = 0.12 + t * 0.25;          // 0.12 → 0.37
+
             const grad = mctx.createRadialGradient(px, py, 0, px, py, glowRadius);
-            grad.addColorStop(0, 'rgba(255, 169, 77, 0.45)');
-            grad.addColorStop(0.3, 'rgba(255, 169, 77, 0.15)');
-            grad.addColorStop(1, 'transparent');
-            
+            grad.addColorStop(0,   `rgba(${r}, ${g}, ${b}, ${(coreAlpha * 2.2).toFixed(2)})`);
+            grad.addColorStop(0.35, `rgba(${r}, ${g}, ${b}, ${coreAlpha.toFixed(2)})`);
+            grad.addColorStop(0.7,  `rgba(${r}, ${g}, ${b}, ${(coreAlpha * 0.3).toFixed(2)})`);
+            grad.addColorStop(1,   'transparent');
+
             mctx.beginPath();
             mctx.arc(px, py, glowRadius, 0, Math.PI * 2);
             mctx.fillStyle = grad;
             mctx.fill();
+        }
 
-            // Core dot
+        // Pass 2 — core dots and labels on top of glows
+        for (const place of countryPlaces) {
+            const coords = mProjection([place.lng, place.lat]);
+            if (!coords) continue;
+            const [x, y] = coords;
+            const px = x * countryZoomTransform.k + countryZoomTransform.x;
+            const py = y * countryZoomTransform.k + countryZoomTransform.y;
+            if (px < -50 || px > mapWidth + 50 || py < -50 || py > mapHeight + 50) continue;
+
+            const records = place.records || 1;
+            const t = Math.log1p(records) / logMax;
+
+            // Core dot radius: 2.5px (t=0) to 6px (t=1)
+            const dotRadius = 2.5 + t * 3.5;
+            const r = Math.round(100 + t * 155);
+            const g = Math.round(255 - t * 186);
+            const b = Math.round(218 - t * 218);
+
             mctx.beginPath();
-            mctx.arc(px, py, 3, 0, Math.PI * 2);
-            mctx.fillStyle = 'rgba(255, 169, 77, 0.9)';
+            mctx.arc(px, py, dotRadius, 0, Math.PI * 2);
+            mctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.95)`;
             mctx.fill();
 
-            // Text label: show place name only when zoomed in (k >= 1.5)
+            // Text label: show place name when zoomed in (k >= 1.5)
             if (countryZoomTransform.k >= 1.5) {
-                mctx.font = '10px "Space Grotesk", sans-serif';
-                mctx.fillStyle = 'rgba(232, 234, 246, 0.85)';
+                mctx.font = `${Math.round(9 + t * 3)}px "Space Grotesk", sans-serif`;
+                mctx.fillStyle = 'rgba(232, 234, 246, 0.88)';
                 mctx.textAlign = 'center';
                 mctx.textBaseline = 'top';
-
-                // Shadow/background glow for the text for readability
                 mctx.shadowColor = 'rgba(8, 12, 28, 1)';
-                mctx.shadowBlur = 4;
-                mctx.fillText(place.name, px, py + 6);
-                mctx.shadowBlur = 0; // Reset shadow
+                mctx.shadowBlur = 5;
+                mctx.fillText(place.name, px, py + dotRadius + 2);
+                mctx.shadowBlur = 0;
             }
         }
     }
