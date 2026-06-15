@@ -95,14 +95,14 @@ function buildContributionGrid(events) {
 
     // Determine absolute oldest date
     const absoluteStart = new Date(hasEvents ? minDate : new Date());
-    const startDay = absoluteStart.getDay();
-    absoluteStart.setDate(absoluteStart.getDate() - startDay); // Sunday before minDate
-    absoluteStart.setHours(0, 0, 0, 0);
+    const startDay = absoluteStart.getUTCDay();
+    absoluteStart.setUTCDate(absoluteStart.getUTCDate() - startDay); // Sunday before minDate
+    absoluteStart.setUTCHours(0, 0, 0, 0);
 
     const end = new Date();
-    const endDay = end.getDay();
-    end.setDate(end.getDate() + (6 - endDay)); // Saturday of current week
-    end.setHours(23, 59, 59, 999);
+    const endDay = end.getUTCDay();
+    end.setUTCDate(end.getUTCDate() + (6 - endDay)); // Saturday of current week
+    end.setUTCHours(23, 59, 59, 999);
 
     // Calculate maximum available weeks
     const totalDiffTime = Math.abs(end - absoluteStart);
@@ -120,10 +120,10 @@ function buildContributionGrid(events) {
 
     // Adjust start date to only show the last numWeeks
     const start = new Date(end);
-    start.setDate(end.getDate() - (daysToShow - 1));
-    const startAdjustDay = start.getDay();
-    start.setDate(start.getDate() - startAdjustDay); // Align to Sunday
-    start.setHours(0, 0, 0, 0);
+    start.setUTCDate(end.getUTCDate() - (daysToShow - 1));
+    const startAdjustDay = start.getUTCDay();
+    start.setUTCDate(start.getUTCDate() - startAdjustDay); // Align to Sunday
+    start.setUTCHours(0, 0, 0, 0);
 
     // Apply grid template column counts dynamically
     activityGrid.style.gridTemplateColumns = `repeat(${numWeeks}, 10px)`;
@@ -136,10 +136,10 @@ function buildContributionGrid(events) {
     let lastMonthStr = '';
     for (let week = 0; week < numWeeks; week++) {
         const sundayDate = new Date(start);
-        sundayDate.setDate(start.getDate() + week * 7);
+        sundayDate.setUTCDate(start.getUTCDate() + week * 7);
         
-        const monthName = sundayDate.toLocaleDateString(undefined, { month: 'short' });
-        const yearName = sundayDate.getFullYear().toString().substring(2);
+        const monthName = sundayDate.toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short' });
+        const yearName = sundayDate.getUTCFullYear().toString().substring(2);
         const monthStr = `${monthName} '${yearName}`;
         
         if (monthStr !== lastMonthStr) {
@@ -174,7 +174,7 @@ function buildContributionGrid(events) {
     const cellsHtml = [];
     for (let i = 0; i < daysToShow; i++) {
         const currentDate = new Date(start);
-        currentDate.setDate(start.getDate() + i);
+        currentDate.setUTCDate(start.getUTCDate() + i);
         
         const dateStr = currentDate.toISOString().substring(0, 10);
         const count = counts[dateStr] || 0;
@@ -186,6 +186,7 @@ function buildContributionGrid(events) {
         else if (count >= 10) level = 4;
 
         const dateFormatted = currentDate.toLocaleDateString(undefined, { 
+            timeZone: 'UTC',
             weekday: 'short', 
             year: 'numeric', 
             month: 'short', 
