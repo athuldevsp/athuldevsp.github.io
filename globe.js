@@ -671,90 +671,54 @@
 
         if (!countryPlaces.length) return;
 
-        // --- Heatmap: scale glow by log of record count ---
+        // Normalise weights on a log scale so the heavy hitters don't dwarf everything
         const maxRecords = Math.max(...countryPlaces.map(p => p.records || 1));
         const logMax = Math.log1p(maxRecords);
 
-        // Sort by records ascending so high-weight places render on top
+        // Draw lightest places first so heavier ones sit on top
         const sorted = [...countryPlaces].sort((a, b) => (a.records || 1) - (b.records || 1));
 
-        // Pass 1 — heatmap glow blobs using 'lighter' blend so dense clusters
-        // accumulate intensity naturally without needing huge radii
-        mctx.globalCompositeOperation = 'lighter';
-
-        for (const place of sorted) {
-            const coords = mProjection([place.lng, place.lat]);
-            if (!coords) continue;
-            const [x, y] = coords;
-            const px = x * countryZoomTransform.k + countryZoomTransform.x;
-            const py = y * countryZoomTransform.k + countryZoomTransform.y;
-            if (px < -80 || px > mapWidth + 80 || py < -80 || py > mapHeight + 80) continue;
-
-            const records = place.records || 1;
-            const t = Math.log1p(records) / logMax; // 0..1 on log scale
-
-            // Tight radius: 8px (cold) → 28px (hot), zoom-scaled
-            const baseGlow = 8 + t * 20;
-            const glowRadius = baseGlow * Math.max(1, countryZoomTransform.k);
-
-            // Colour: teal → amber → coral-red
-            const r = Math.round(80  + t * 175);   // 80  → 255
-            const g = Math.round(220 - t * 151);   // 220 → 69
-            const b = Math.round(200 - t * 200);   // 200 → 0
-
-            // Sharp centre, fast falloff — alpha intentionally low so 'lighter'
-            // accumulation does the heavy lifting in dense areas
-            const peakA = (0.06 + t * 0.18).toFixed(3);
-            const midA  = (0.02 + t * 0.06).toFixed(3);
-
-            const grad = mctx.createRadialGradient(px, py, 0, px, py, glowRadius);
-            grad.addColorStop(0,    `rgba(${r}, ${g}, ${b}, ${peakA})`);
-            grad.addColorStop(0.45, `rgba(${r}, ${g}, ${b}, ${midA})`);
-            grad.addColorStop(1,    'rgba(0,0,0,0)');
-
-            mctx.beginPath();
-            mctx.arc(px, py, glowRadius, 0, Math.PI * 2);
-            mctx.fillStyle = grad;
-            mctx.fill();
-        }
-
-        // Restore normal blending for dots and labels
         mctx.globalCompositeOperation = 'source-over';
 
-        // Pass 2 — crisp core dots + labels on top
         for (const place of sorted) {
             const coords = mProjection([place.lng, place.lat]);
             if (!coords) continue;
             const [x, y] = coords;
             const px = x * countryZoomTransform.k + countryZoomTransform.x;
             const py = y * countryZoomTransform.k + countryZoomTransform.y;
-            if (px < -50 || px > mapWidth + 50 || py < -50 || py > mapHeight + 50) continue;
+            if (px < -20 || px > mapWidth + 20 || py < -20 || py > mapHeight + 20) continue;
 
-            const records = place.records || 1;
-            const t = Math.log1p(records) / logMax;
+            const t = Math.log1p(place.records || 1) / logMax; // 0..1
 
-            const r = Math.round(80  + t * 175);
-            const g = Math.round(220 - t * 151);
-            const b = Math.round(200 - t * 200);
+            // Color: teal (#50dcc8) → amber (#ffb84d) → coral (#ff4d4d)
+            const r = Math.round(80  + t * 175);  // 80  → 255
+            const g = Math.round(220 - t * 150);  // 220 → 70
+            const b = Math.round(200 - t * 200);  // 200 → 0
 
-            // Dot: 2px (cold) → 5px (hot)
-            const dotR = 2 + t * 3;
+            // Radius: 2px (rare) → 7px (home city)
+            const dotR = 2 + t * 5;
+
+            // Dark outline so overlapping dots stay distinct
             mctx.beginPath();
-            mctx.arc(px, py, dotR, 0, Math.PI * 2);
-            mctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.95)`;
+            mctx.arc(px, py, dotR + 1, 0, Math.PI * 2);
+            mctx.fillStyle = 'rgba(8, 12, 28, 0.7)';
             mctx.fill();
 
-            // Label: always show top-quarter places; others only when zoomed in
-            const showLabel = t > 0.75 || countryZoomTransform.k >= 1.5;
-            if (showLabel) {
-                const fontSize = Math.round(8 + t * 4);
-                mctx.font = `${fontSize}px "Space Grotesk", sans-serif`;
-                mctx.fillStyle = 'rgba(232, 234, 246, 0.88)';
+            // Coloured dot
+            mctx.beginPath();
+            mctx.arc(px, py, dotR, 0, Math.PI * 2);
+            mctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+            mctx.fill();
+
+            // Label: top 20% by weight always visible; rest only when zoomed in
+            if (t > 0.8 || countryZoomTransform.k >= 1.5) {
+                mctx.font = `${Math.round(8 + t * 4)}px "Space Grotesk", sans-serif`;
                 mctx.textAlign = 'center';
                 mctx.textBaseline = 'top';
                 mctx.shadowColor = 'rgba(8, 12, 28, 1)';
                 mctx.shadowBlur = 4;
-                mctx.fillText(place.name, px, py + dotR + 2);
+                mctx.fillStyle = 'rgba(232, 234, 246, 0.9)';
+                mctx.fillText(place.name, px, py + dotR + 3);
                 mctx.shadowBlur = 0;
             }
         }
