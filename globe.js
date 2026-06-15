@@ -672,41 +672,45 @@
         if (!countryPlaces.length) return;
 
         // --- Heatmap: scale glow by log of record count ---
-        // Compute log-scale normaliser across all places in this country
         const maxRecords = Math.max(...countryPlaces.map(p => p.records || 1));
         const logMax = Math.log1p(maxRecords);
 
-        // Two-pass rendering: glows first (additive blending effect), then core dots on top
-        mctx.globalCompositeOperation = 'source-over';
+        // Sort by records ascending so high-weight places render on top
+        const sorted = [...countryPlaces].sort((a, b) => (a.records || 1) - (b.records || 1));
 
-        // Pass 1 — heatmap glow blobs
-        for (const place of countryPlaces) {
+        // Pass 1 — heatmap glow blobs using 'lighter' blend so dense clusters
+        // accumulate intensity naturally without needing huge radii
+        mctx.globalCompositeOperation = 'lighter';
+
+        for (const place of sorted) {
             const coords = mProjection([place.lng, place.lat]);
             if (!coords) continue;
             const [x, y] = coords;
             const px = x * countryZoomTransform.k + countryZoomTransform.x;
             const py = y * countryZoomTransform.k + countryZoomTransform.y;
-            if (px < -100 || px > mapWidth + 100 || py < -100 || py > mapHeight + 100) continue;
+            if (px < -80 || px > mapWidth + 80 || py < -80 || py > mapHeight + 80) continue;
 
             const records = place.records || 1;
-            const t = Math.log1p(records) / logMax; // 0..1 normalised on log scale
+            const t = Math.log1p(records) / logMax; // 0..1 on log scale
 
-            // Radius: from 14px (t=0) to 70px (t=1), scaled by zoom
-            const baseGlow = 14 + t * 56;
-            const glowRadius = baseGlow * countryZoomTransform.k;
+            // Tight radius: 8px (cold) → 28px (hot), zoom-scaled
+            const baseGlow = 8 + t * 20;
+            const glowRadius = baseGlow * Math.max(1, countryZoomTransform.k);
 
-            // Colour: interpolate warm palette — teal (cold) → amber → hot coral
-            // Use a three-stop heatmap: teal at low, amber at mid, coral-red at high
-            const r = Math.round(100 + t * 155);        // 100 → 255
-            const g = Math.round(255 - t * 186);        // 255 → 69
-            const b = Math.round(218 - t * 218);        // 218 → 0
-            const coreAlpha = 0.12 + t * 0.25;          // 0.12 → 0.37
+            // Colour: teal → amber → coral-red
+            const r = Math.round(80  + t * 175);   // 80  → 255
+            const g = Math.round(220 - t * 151);   // 220 → 69
+            const b = Math.round(200 - t * 200);   // 200 → 0
+
+            // Sharp centre, fast falloff — alpha intentionally low so 'lighter'
+            // accumulation does the heavy lifting in dense areas
+            const peakA = (0.06 + t * 0.18).toFixed(3);
+            const midA  = (0.02 + t * 0.06).toFixed(3);
 
             const grad = mctx.createRadialGradient(px, py, 0, px, py, glowRadius);
-            grad.addColorStop(0,   `rgba(${r}, ${g}, ${b}, ${(coreAlpha * 2.2).toFixed(2)})`);
-            grad.addColorStop(0.35, `rgba(${r}, ${g}, ${b}, ${coreAlpha.toFixed(2)})`);
-            grad.addColorStop(0.7,  `rgba(${r}, ${g}, ${b}, ${(coreAlpha * 0.3).toFixed(2)})`);
-            grad.addColorStop(1,   'transparent');
+            grad.addColorStop(0,    `rgba(${r}, ${g}, ${b}, ${peakA})`);
+            grad.addColorStop(0.45, `rgba(${r}, ${g}, ${b}, ${midA})`);
+            grad.addColorStop(1,    'rgba(0,0,0,0)');
 
             mctx.beginPath();
             mctx.arc(px, py, glowRadius, 0, Math.PI * 2);
@@ -714,8 +718,11 @@
             mctx.fill();
         }
 
-        // Pass 2 — core dots and labels on top of glows
-        for (const place of countryPlaces) {
+        // Restore normal blending for dots and labels
+        mctx.globalCompositeOperation = 'source-over';
+
+        // Pass 2 — crisp core dots + labels on top
+        for (const place of sorted) {
             const coords = mProjection([place.lng, place.lat]);
             if (!coords) continue;
             const [x, y] = coords;
@@ -726,26 +733,28 @@
             const records = place.records || 1;
             const t = Math.log1p(records) / logMax;
 
-            // Core dot radius: 2.5px (t=0) to 6px (t=1)
-            const dotRadius = 2.5 + t * 3.5;
-            const r = Math.round(100 + t * 155);
-            const g = Math.round(255 - t * 186);
-            const b = Math.round(218 - t * 218);
+            const r = Math.round(80  + t * 175);
+            const g = Math.round(220 - t * 151);
+            const b = Math.round(200 - t * 200);
 
+            // Dot: 2px (cold) → 5px (hot)
+            const dotR = 2 + t * 3;
             mctx.beginPath();
-            mctx.arc(px, py, dotRadius, 0, Math.PI * 2);
+            mctx.arc(px, py, dotR, 0, Math.PI * 2);
             mctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.95)`;
             mctx.fill();
 
-            // Text label: show place name when zoomed in (k >= 1.5)
-            if (countryZoomTransform.k >= 1.5) {
-                mctx.font = `${Math.round(9 + t * 3)}px "Space Grotesk", sans-serif`;
+            // Label: always show top-quarter places; others only when zoomed in
+            const showLabel = t > 0.75 || countryZoomTransform.k >= 1.5;
+            if (showLabel) {
+                const fontSize = Math.round(8 + t * 4);
+                mctx.font = `${fontSize}px "Space Grotesk", sans-serif`;
                 mctx.fillStyle = 'rgba(232, 234, 246, 0.88)';
                 mctx.textAlign = 'center';
                 mctx.textBaseline = 'top';
                 mctx.shadowColor = 'rgba(8, 12, 28, 1)';
-                mctx.shadowBlur = 5;
-                mctx.fillText(place.name, px, py + dotRadius + 2);
+                mctx.shadowBlur = 4;
+                mctx.fillText(place.name, px, py + dotR + 2);
                 mctx.shadowBlur = 0;
             }
         }
