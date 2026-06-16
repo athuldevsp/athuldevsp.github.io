@@ -26,10 +26,10 @@
             this.opacity = Math.random() * 0.5 + 0.1;
             // Color tints — aurora green, sky blue, or warm
             const colors = [
-                '100, 255, 218',  // aurora
-                '116, 185, 255',  // sky
-                '162, 155, 254',  // violet
-                '255, 169, 77',   // warm (rare)
+                '0, 240, 255',   // aurora (electric cyan)
+                '56, 189, 248',  // sky
+                '167, 139, 250', // violet
+                '245, 158, 11',  // warm
             ];
             this.color = colors[Math.random() < 0.7 ? 0 : Math.floor(Math.random() * colors.length)];
         }
@@ -77,7 +77,7 @@
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < 120) {
                     const opacity = (1 - dist / 120) * 0.12;
-                    ctx.strokeStyle = `rgba(100, 255, 218, ${opacity})`;
+                    ctx.strokeStyle = `rgba(0, 240, 255, ${opacity})`;
                     ctx.lineWidth = 0.5;
                     ctx.beginPath();
                     ctx.moveTo(particles[a].x, particles[a].y);

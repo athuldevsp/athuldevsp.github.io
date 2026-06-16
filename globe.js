@@ -363,7 +363,7 @@
                 ctx.fill();
 
                 // Restore default land color on top of erased area
-                ctx.fillStyle = 'rgba(100, 255, 218, 0.03)';
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.03)';
                 ctx.fill();
             }
 
@@ -382,8 +382,8 @@
 
         // Outer glow
         const glow = ctx.createRadialGradient(cx, cy, r * 0.85, cx, cy, r * 1.4);
-        glow.addColorStop(0, 'rgba(100, 255, 218, 0.04)');
-        glow.addColorStop(0.6, 'rgba(100, 255, 218, 0.01)');
+        glow.addColorStop(0, 'rgba(0, 240, 255, 0.04)');
+        glow.addColorStop(0.6, 'rgba(0, 240, 255, 0.01)');
         glow.addColorStop(1, 'transparent');
         ctx.beginPath();
         ctx.arc(cx, cy, r * 1.4, 0, Math.PI * 2);
@@ -395,7 +395,7 @@
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(8, 12, 28, 0.6)';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.15)';
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.15)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
     }
@@ -406,7 +406,7 @@
         // Draw default land first
         ctx.beginPath();
         path(worldData.land);
-        ctx.fillStyle = 'rgba(100, 255, 218, 0.03)';
+        ctx.fillStyle = 'rgba(0, 240, 255, 0.03)';
         ctx.fill();
     }
 
@@ -426,21 +426,21 @@
                 if (selectedCountry && selectedCountry.id === feature.id) {
                     ctx.fillStyle = 'rgba(255, 169, 77, 0.3)'; // Selected country (warm orange)
                 } else if (hoveredCountry && hoveredCountry.id === feature.id) {
-                    ctx.fillStyle = 'rgba(100, 255, 218, 0.25)'; // Hovered country (glowing green)
+                    ctx.fillStyle = 'rgba(0, 240, 255, 0.25)'; // Hovered country (glowing cyan)
                 } else {
-                    ctx.fillStyle = 'rgba(100, 255, 218, 0.12)'; // Default visited country (soft green)
+                    ctx.fillStyle = 'rgba(0, 240, 255, 0.12)'; // Default visited country (soft cyan)
                 }
                 ctx.fill();
 
                 // Glow outline on hover / selection
                 if (hoveredCountry && hoveredCountry.id === feature.id) {
-                    ctx.strokeStyle = 'rgba(100, 255, 218, 0.8)';
+                    ctx.strokeStyle = 'rgba(0, 240, 255, 0.8)';
                     ctx.lineWidth = 1.2;
                 } else if (selectedCountry && selectedCountry.id === feature.id) {
                     ctx.strokeStyle = 'rgba(255, 169, 77, 0.8)';
                     ctx.lineWidth = 1.0;
                 } else {
-                    ctx.strokeStyle = 'rgba(100, 255, 218, 0.25)';
+                    ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
                     ctx.lineWidth = 0.6;
                 }
                 ctx.stroke();
@@ -455,7 +455,7 @@
 
         ctx.beginPath();
         path(worldData.borders);
-        ctx.strokeStyle = `rgba(100, 255, 218, ${borderOpacity})`;
+        ctx.strokeStyle = `rgba(0, 240, 255, ${borderOpacity})`;
         ctx.lineWidth = 0.5;
         ctx.stroke();
     }
@@ -464,7 +464,7 @@
         const graticule = d3.geoGraticule().step([20, 20])();
         ctx.beginPath();
         path(graticule);
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.02)';
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.02)';
         ctx.lineWidth = 0.4;
         ctx.stroke();
     }
@@ -661,9 +661,9 @@
         
         mctx.beginPath();
         mPath(countryFeature);
-        mctx.fillStyle = 'rgba(100, 255, 218, 0.08)';
+        mctx.fillStyle = 'rgba(0, 240, 255, 0.08)';
         mctx.fill();
-        mctx.strokeStyle = 'rgba(100, 255, 218, 0.4)';
+        mctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
         mctx.lineWidth = 1.5 / countryZoomTransform.k;
         mctx.stroke();
         

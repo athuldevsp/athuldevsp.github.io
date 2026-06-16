@@ -71,9 +71,9 @@ function renderPublications(pubs) {
                          pub.type === 'talk'   ? 'Conference Talk' : 'Journal Paper';
         const typeColor = pub.type === 'paper' ? 'var(--accent-aurora)' :
                          pub.type === 'talk'   ? 'var(--accent-warm)'   : 'var(--accent-sky)';
-        const badgeStyle = `background: rgba(100,255,218,0.05); border: 1px solid rgba(100,255,218,0.12); color: ${typeColor}; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.68rem; font-family: var(--font-mono); font-weight: 600; letter-spacing: 0.02em;`;
+        const badgeStyle = `background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: ${typeColor}; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.68rem; font-family: var(--font-mono); font-weight: 600; letter-spacing: 0.02em;`;
         const yearStyle  = `background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-secondary);`;
-        const citStyle   = `background: rgba(255,169,77,0.06); border: 1px solid rgba(255,169,77,0.12); color: var(--accent-warm); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.68rem; font-family: var(--font-mono);`;
+        const citStyle   = `background: rgba(245, 158, 11, 0.06); border: 1px solid rgba(245, 158, 11, 0.12); color: var(--accent-warm); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.68rem; font-family: var(--font-mono);`;
 
         return `
         <div class="pub-card" style="animation-delay: ${idx * 0.01}s">
