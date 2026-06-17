@@ -49,6 +49,51 @@ window.gitlabProjects = [
 
 window.gitlabActivity = [
   {
+    "created_at": "2026-06-17T14:53:03.276Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-17T14:51:35.456Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-17T13:50:01.365Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-17T13:48:49.275Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-17T13:22:42.719Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-16T21:28:24.733Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-16T21:27:26.360Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-16T21:26:18.093Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-16T21:25:40.725Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
     "created_at": "2026-06-13T14:26:13.698Z",
     "action_name": "pushed to",
     "target_type": "Project"
@@ -2500,51 +2545,6 @@ window.gitlabActivity = [
   },
   {
     "created_at": "2024-11-15T15:11:55.616Z",
-    "action_name": "commented on",
-    "target_type": "Note"
-  },
-  {
-    "created_at": "2024-11-15T15:11:31.990Z",
-    "action_name": "commented on",
-    "target_type": "Note"
-  },
-  {
-    "created_at": "2024-11-15T15:10:58.673Z",
-    "action_name": "commented on",
-    "target_type": "Note"
-  },
-  {
-    "created_at": "2024-11-15T15:09:22.920Z",
-    "action_name": "commented on",
-    "target_type": "Note"
-  },
-  {
-    "created_at": "2024-11-15T15:08:54.883Z",
-    "action_name": "commented on",
-    "target_type": "Note"
-  },
-  {
-    "created_at": "2024-11-15T15:08:31.406Z",
-    "action_name": "commented on",
-    "target_type": "Note"
-  },
-  {
-    "created_at": "2024-11-15T14:38:30.579Z",
-    "action_name": "commented on",
-    "target_type": "Note"
-  },
-  {
-    "created_at": "2024-11-15T14:38:11.664Z",
-    "action_name": "commented on",
-    "target_type": "Note"
-  },
-  {
-    "created_at": "2024-11-15T14:37:21.502Z",
-    "action_name": "commented on",
-    "target_type": "Note"
-  },
-  {
-    "created_at": "2024-11-15T14:36:50.745Z",
     "action_name": "commented on",
     "target_type": "Note"
   }
