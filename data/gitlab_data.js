@@ -7,7 +7,7 @@ window.gitlabProjects = [
     "web_url": "https://gitlab.cern.ch/asudhaka/DarkLeaf",
     "star_count": 0,
     "forks_count": 0,
-    "last_activity_at": "2026-06-22T13:40:53.738Z"
+    "last_activity_at": "2026-06-22T19:22:12.014Z"
   },
   {
     "id": 210263,
@@ -57,6 +57,11 @@ window.gitlabProjects = [
 ];
 
 window.gitlabActivity = [
+  {
+    "created_at": "2026-06-22T19:22:12.014Z",
+    "action_name": "pushed to",
+    "target_type": "Project"
+  },
   {
     "created_at": "2026-06-22T13:40:53.738Z",
     "action_name": "pushed new",
@@ -2549,11 +2554,6 @@ window.gitlabActivity = [
   },
   {
     "created_at": "2025-07-06T07:16:35.744Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-07-05T12:49:07.670Z",
     "action_name": "pushed to",
     "target_type": "Project"
   }
