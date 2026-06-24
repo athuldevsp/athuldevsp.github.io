@@ -58,6 +58,16 @@ window.gitlabProjects = [
 
 window.gitlabActivity = [
   {
+    "created_at": "2026-06-24T14:43:58.324Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-24T14:42:46.262Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
     "created_at": "2026-06-24T13:58:30.504Z",
     "action_name": "commented on",
     "target_type": "Note"
@@ -2544,16 +2554,6 @@ window.gitlabActivity = [
   },
   {
     "created_at": "2025-08-05T10:14:49.165Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-05T09:23:43.166Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-05T09:11:16.134Z",
     "action_name": "pushed to",
     "target_type": "Project"
   }
