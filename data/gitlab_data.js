@@ -58,6 +58,106 @@ window.gitlabProjects = [
 
 window.gitlabActivity = [
   {
+    "created_at": "2026-06-25T14:25:07.160Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T13:34:28.799Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T13:32:01.202Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T13:30:30.219Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T13:29:09.834Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T13:27:36.018Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T13:07:49.446Z",
+    "action_name": "commented on",
+    "target_type": "DiscussionNote"
+  },
+  {
+    "created_at": "2026-06-25T11:57:45.627Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T11:55:28.054Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T11:55:05.866Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T11:54:41.615Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T11:54:15.752Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T11:53:51.006Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T11:52:53.067Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T11:52:18.122Z",
+    "action_name": "commented on",
+    "target_type": "DiscussionNote"
+  },
+  {
+    "created_at": "2026-06-25T11:50:34.553Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T11:50:06.392Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T11:49:40.299Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T11:48:53.632Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
+    "created_at": "2026-06-25T11:48:18.511Z",
+    "action_name": "commented on",
+    "target_type": "Note"
+  },
+  {
     "created_at": "2026-06-24T14:43:58.324Z",
     "action_name": "commented on",
     "target_type": "Note"
@@ -2454,106 +2554,6 @@ window.gitlabActivity = [
   },
   {
     "created_at": "2025-09-22T11:39:53.213Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-09-20T11:12:07.423Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-09-20T09:48:16.111Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-09-20T09:21:11.639Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-09-19T16:24:28.326Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-09-19T15:55:19.317Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-09-17T23:55:54.202Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-09-15T16:06:04.516Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-09-04T16:30:56.654Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-28T09:56:29.467Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-27T13:13:51.324Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-27T11:39:16.076Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-27T10:48:40.016Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-14T17:49:22.967Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-12T17:11:44.145Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-12T17:02:13.229Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-11T17:26:38.123Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-11T17:21:59.779Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-09T11:01:22.622Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-09T09:17:02.210Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-08-05T10:14:49.165Z",
     "action_name": "pushed to",
     "target_type": "Project"
   }
