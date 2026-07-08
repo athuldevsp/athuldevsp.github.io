@@ -16,7 +16,7 @@ window.gitlabProjects = [
     "web_url": "https://gitlab.cern.ch/asudhaka/repository-of-higgs-affairs",
     "star_count": 0,
     "forks_count": 0,
-    "last_activity_at": "2026-06-27T12:38:09.928Z"
+    "last_activity_at": "2026-07-08T17:12:18.596Z"
   },
   {
     "id": 203320,
@@ -57,6 +57,11 @@ window.gitlabProjects = [
 ];
 
 window.gitlabActivity = [
+  {
+    "created_at": "2026-07-08T17:12:18.596Z",
+    "action_name": "pushed to",
+    "target_type": "Project"
+  },
   {
     "created_at": "2026-06-27T12:40:07.552Z",
     "action_name": "pushed to",
@@ -2549,11 +2554,6 @@ window.gitlabActivity = [
   },
   {
     "created_at": "2025-09-26T18:05:39.823Z",
-    "action_name": "pushed to",
-    "target_type": "Project"
-  },
-  {
-    "created_at": "2025-09-26T15:09:27.452Z",
     "action_name": "pushed to",
     "target_type": "Project"
   }
