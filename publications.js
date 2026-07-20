@@ -7,10 +7,12 @@ const AUTHOR_ID = '2389285019'; // Athul Dev's Semantic Scholar Author ID
 // ---- Fetch live citation updates from Semantic Scholar author papers ----
 async function fetchSemanticScholarUpdates(localPubs) {
     const updated = [...localPubs];
+    let liveFetched = false;
     try {
         // Fetch all papers from Semantic Scholar for this author
         const resp = await fetch(`https://api.semanticscholar.org/graph/v1/author/${AUTHOR_ID}?fields=papers.title,papers.citationCount,papers.externalIds`);
         if (resp.ok) {
+            liveFetched = true;
             const data = await resp.json();
             const s2Papers = data.papers || [];
             
@@ -40,7 +42,17 @@ async function fetchSemanticScholarUpdates(localPubs) {
     } catch (e) {
         console.warn('Semantic Scholar live update failed, using pre-scraped citation counts.', e);
     }
-    return updated;
+    return { publications: updated, liveFetched };
+}
+
+function setPublicationFetchTime(source) {
+    const el = document.getElementById('publications-last-fetch');
+    if (!el) return;
+    const formatted = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+    }).format(new Date());
+    el.textContent = `Last fetched: ${formatted} · ${source}`;
 }
 
 // ---- Aggregate citation stats ----
@@ -108,6 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const response = await fetch('data/publications.json');
         if (!response.ok) throw new Error('Failed to load data/publications.json');
         let pubs = await response.json();
+        setPublicationFetchTime('local Google Scholar dataset');
 
         // Render initially with local counts
         const initialStats = computeStats(pubs);
@@ -118,7 +131,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderPublications(pubs);
 
         // Try to update with live Semantic Scholar citations
-        pubs = await fetchSemanticScholarUpdates(pubs);
+        const liveResult = await fetchSemanticScholarUpdates(pubs);
+        pubs = liveResult.publications;
+        if (liveResult.liveFetched) setPublicationFetchTime('Semantic Scholar');
         
         // Render again with updated counts
         const finalStats = computeStats(pubs);

@@ -12,6 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const projects = window.gitlabProjects || [];
     const activity = window.gitlabActivity || [];
 
+    const fetchedEl = document.getElementById('gitlab-last-fetch');
+    if (fetchedEl && window.gitlabFetchedAt) {
+        const fetchedAt = new Date(window.gitlabFetchedAt);
+        fetchedEl.textContent = `Last fetched: ${new Intl.DateTimeFormat(undefined, {
+            dateStyle: 'medium',
+            timeStyle: 'short'
+        }).format(fetchedAt)}`;
+    }
+
     // Render projects list
     renderProjects(projects);
 

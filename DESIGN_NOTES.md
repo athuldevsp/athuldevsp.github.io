@@ -13,10 +13,10 @@ The chosen direction combines the latter two ideas: editorial analysis-note typo
 - The hero portrait now sits at the detector interaction point. Four finite track paths draw through tracker, calorimeter, and muon-system arcs, then stop. There is no continuous decorative animation.
 - Track Cyan, Track Amber, and Track Crimson are assigned by surface instead of mixed into rainbow gradients. Signal Violet appears only on the dark-matter thesis marker.
 - Badges are compact detector readouts with small signal dots. Cards use restrained square geometry and a track-colour underline on hover.
-- Academic and repository pages share a low-opacity concentric detector texture, keeping the hero language coherent across the site.
-- Work roles and academic entries use progressive-disclosure controls: the first entry starts open, each item can be expanded or collapsed, and details remain readable when JavaScript is unavailable.
+- Experience and education now share one route and one progressive-disclosure pattern. Every role, degree, and research project uses a restrained flat SVG symbol; the first item in each group starts open and details remain readable when JavaScript is unavailable.
+- Repository and publication pages show the timestamp of the dataset or API fetch that produced the visible data.
 - The travel globe and detail map use the same paper, ink, cyan, amber, and crimson tokens as the rest of the interface instead of the previous dark neon canvas palette.
-- Existing section numbering remains, now treated as monospace analysis labels rather than decoration.
+- Section numbering and the detector-caption text behind the portrait were removed to keep the notebook presentation quiet.
 
 ## Motion and accessibility
 
@@ -26,4 +26,4 @@ The chosen direction combines the latter two ideas: editorial analysis-note typo
 
 ## Protected integrations
 
-GitLab activity/projects, Semantic Scholar publications, and travel globe scripts and data contracts were not changed. Three legacy CSS custom-property aliases remain solely because the protected publication renderer emits those names inline; each resolves directly to the new track palette.
+GitLab activity/projects and Semantic Scholar publications retain their data contracts, with additive fetch-time metadata for freshness labels. Three legacy CSS custom-property aliases remain solely because the publication renderer emits those names inline; each resolves directly to the new track palette.

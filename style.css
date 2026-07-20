@@ -503,20 +503,6 @@ img { max-width: 100%; height: auto; }
     box-shadow: 0 20px 55px rgba(73, 59, 37, 0.16);
 }
 
-.detector-caption {
-    position: absolute;
-    right: 3%;
-    bottom: 8%;
-    display: grid;
-    gap: 0.2rem;
-    padding-left: 0.75rem;
-    border-left: 2px solid var(--track-crimson);
-    color: var(--paper-muted);
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.08em;
-}
-
 @keyframes detector-layer-in {
     from { opacity: 0; transform: scale(0.94) rotate(var(--layer-rotation, 0deg)); }
     to { opacity: 0.7; }
@@ -589,14 +575,6 @@ img { max-width: 100%; height: auto; }
     display: flex;
     align-items: center;
     gap: 1rem;
-}
-
-.section-number {
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
-    color: var(--track-crimson);
-    font-weight: 500;
-    letter-spacing: 0.1em;
 }
 
 .section-title::after {
@@ -1212,6 +1190,17 @@ img { max-width: 100%; height: auto; }
     transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
 }
 
+.experience-tab-mark svg,
+.recognition-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .experience-tab.is-active .experience-tab-mark {
     color: var(--bg-deep);
     background: var(--track-cyan);
@@ -1305,6 +1294,54 @@ img { max-width: 100%; height: auto; }
 
 .experience-panel .timeline-details {
     max-width: 650px;
+}
+
+.experience-panel .supervisor {
+    margin: -0.8rem 0 1.25rem;
+    color: var(--track-amber);
+    font-size: 0.82rem;
+    font-style: italic;
+}
+
+.profile-subsection {
+    margin-top: clamp(4.5rem, 9vw, 7rem);
+    scroll-margin-top: calc(var(--nav-height) + 1.5rem);
+}
+
+.compact-panel { min-height: 280px; }
+
+.recognition-card {
+    max-width: 980px;
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(255, 253, 248, 0.88);
+    border: 1px solid var(--border-color);
+    border-top: 2px solid var(--track-amber);
+    box-shadow: var(--card-shadow);
+}
+
+.recognition-icon {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    color: var(--track-amber);
+    border: 1px solid currentColor;
+    border-radius: 50%;
+}
+
+.recognition-card h3 {
+    margin: 0.25rem 0 0.35rem;
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+.recognition-card p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
 }
 
 /* ======================================================================
@@ -1859,7 +1896,12 @@ img { max-width: 100%; height: auto; }
 .video-pane-body {
     position: relative;
     width: 100%;
-    background: #000;
+    min-height: 180px;
+    background:
+        linear-gradient(rgba(0, 117, 121, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 117, 121, 0.08) 1px, transparent 1px),
+        var(--ink-raised);
+    background-size: 24px 24px;
 }
 
 .country-video-frame {
@@ -1867,13 +1909,16 @@ img { max-width: 100%; height: auto; }
     width: 100%;
     height: 420px;
     border: none;
+    background: var(--ink-raised);
+    color-scheme: light;
 }
 
 .country-video-player {
     display: block;
     width: 100%;
     max-height: 420px;
-    background: #000;
+    background: var(--ink-raised);
+    object-fit: contain;
 }
 
 .video-no-link {
@@ -2440,23 +2485,37 @@ img { max-width: 100%; height: auto; }
 }
 
 .globe-controls {
-    background: rgba(246, 240, 229, 0.9);
-    border-color: var(--border-strong);
-    border-radius: 2px;
+    padding: 0.4rem;
+    background: rgba(255, 253, 248, 0.98);
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    box-shadow: 0 8px 24px rgba(73, 59, 37, 0.16);
 }
 
 .globe-controls button {
     min-height: 44px;
+    background: var(--ink-raised);
+    border: 1px solid var(--border-strong);
     border-radius: 2px;
-    color: var(--paper-muted);
+    color: var(--ink);
     font-family: var(--font-mono);
-    font-size: 0.66rem;
+    font-size: 0.72rem;
+    font-weight: 600;
 }
 
 .globe-controls button:hover,
 .globe-controls button.active {
     color: var(--paper);
     background: var(--track-cyan);
+    border-color: var(--track-cyan);
+}
+
+.data-freshness {
+    margin-top: 0.65rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
 }
 
 .map-hint,
@@ -2521,7 +2580,6 @@ img { max-width: 100%; height: auto; }
         height: clamp(150px, 27vw, 196px);
     }
 
-    .detector-caption { right: 1%; bottom: 5%; }
 }
 
 @media (max-width: 768px) {
@@ -2561,7 +2619,6 @@ img { max-width: 100%; height: auto; }
         width: clamp(142px, 38vw, 182px);
         height: clamp(142px, 38vw, 182px);
     }
-    .detector-caption { font-size: 0.52rem; }
 
     .hero-badges,
     .hero-cta { justify-content: flex-start; }
@@ -2634,6 +2691,8 @@ img { max-width: 100%; height: auto; }
 
     .globe-controls {
         position: static;
+        left: auto;
+        transform: none;
         display: grid;
         grid-template-columns: 1fr 1fr;
         margin: 0.75rem;
@@ -2656,7 +2715,6 @@ img { max-width: 100%; height: auto; }
     .hero-cta { grid-template-columns: 1fr; }
     .hero-name { font-size: clamp(2.35rem, 14vw, 3.2rem); }
     .badge { width: 100%; }
-    .detector-caption { display: none; }
     .timeline-meta { display: grid; }
     .pub-card,
     .repo-card { padding: 1.15rem; }

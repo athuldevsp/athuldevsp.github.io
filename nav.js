@@ -76,11 +76,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    /* --- Work experience switcher --- */
-    const experienceSwitcher = document.querySelector('[data-experience-tabs]');
-    if (experienceSwitcher) {
-        const tabs = Array.from(experienceSwitcher.querySelectorAll('.experience-tab'));
-        const panels = Array.from(experienceSwitcher.querySelectorAll('[data-experience-panel]'));
+    /* --- Work, education, and research switchers --- */
+    document.querySelectorAll('[data-profile-switcher]').forEach(profileSwitcher => {
+        const tabs = Array.from(profileSwitcher.querySelectorAll('.experience-tab'));
+        const panels = Array.from(profileSwitcher.querySelectorAll('[data-experience-panel]'));
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         const setExperience = (selectedTab, shouldOpen, moveFocus = false, scrollTab = true) => {
@@ -145,72 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        experienceSwitcher.classList.add('experience-tabs-ready');
+        profileSwitcher.classList.add('experience-tabs-ready');
         setExperience(tabs.find(tab => tab.getAttribute('aria-expanded') === 'true') || tabs[0], true, false, false);
-    }
-
-    /* --- Academic timeline accordions --- */
-    document.querySelectorAll('.page-academic .timeline').forEach((timeline, timelineIndex) => {
-        const cards = Array.from(timeline.querySelectorAll('.timeline-card'));
-        cards.forEach((card, cardIndex) => {
-            const details = card.querySelector('.timeline-details');
-            const title = card.querySelector('h3');
-            if (!details || !title) return;
-
-            const detailsId = `academic-details-${timelineIndex}-${cardIndex}`;
-            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            const disclosure = document.createElement('button');
-            disclosure.className = 'timeline-card-disclosure';
-            disclosure.type = 'button';
-            disclosure.setAttribute('aria-controls', detailsId);
-            disclosure.setAttribute('aria-label', `${title.textContent.trim()}. Toggle details.`);
-            disclosure.innerHTML = '<span>View details</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 9 6 6 6-6"/></svg>';
-
-            details.id = detailsId;
-            card.classList.add('is-collapsible');
-            card.appendChild(disclosure);
-
-            const setOpen = (shouldOpen, animate = true) => {
-                card.classList.toggle('is-open', shouldOpen);
-                disclosure.setAttribute('aria-expanded', String(shouldOpen));
-                disclosure.querySelector('span').textContent = shouldOpen ? 'Hide details' : 'View details';
-                if (window.gsap) window.gsap.killTweensOf(details);
-
-                if (shouldOpen) {
-                    details.hidden = false;
-                    if (animate && !prefersReducedMotion && window.gsap) {
-                        window.gsap.fromTo(details, { autoAlpha: 0, y: 8 }, {
-                            autoAlpha: 1,
-                            y: 0,
-                            duration: 0.26,
-                            ease: 'power2.out',
-                            clearProps: 'transform,opacity,visibility'
-                        });
-                    }
-                } else if (animate && !details.hidden && !prefersReducedMotion && window.gsap) {
-                    window.gsap.to(details, {
-                        autoAlpha: 0,
-                        y: -4,
-                        duration: 0.15,
-                        ease: 'power1.in',
-                        onComplete: () => {
-                            if (!card.classList.contains('is-open')) details.hidden = true;
-                            window.gsap.set(details, { clearProps: 'transform,opacity,visibility' });
-                        }
-                    });
-                } else {
-                    details.hidden = true;
-                }
-            };
-
-            const toggleCard = () => setOpen(disclosure.getAttribute('aria-expanded') !== 'true');
-            card.addEventListener('click', event => {
-                if (event.target.closest('button, a')) return;
-                toggleCard();
-            });
-            disclosure.addEventListener('click', toggleCard);
-
-            setOpen(cardIndex === 0, false);
-        });
     });
 });
