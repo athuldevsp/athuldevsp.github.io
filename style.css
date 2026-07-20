@@ -818,20 +818,22 @@ img { max-width: 100%; height: auto; }
 /* ---------- Scroll Reveal Animation ---------- */
 .reveal-up {
     opacity: 0;
-    transform: translateY(40px);
-    transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
+    transform: translateY(18px);
+    transition: opacity 520ms var(--ease-out), transform 520ms var(--ease-out);
+    will-change: opacity, transform;
 }
 
 .reveal-up.revealed {
     opacity: 1;
     transform: translateY(0);
+    will-change: auto;
 }
 
-.delay-1 { transition-delay: 0.1s; }
-.delay-2 { transition-delay: 0.2s; }
-.delay-3 { transition-delay: 0.3s; }
-.delay-4 { transition-delay: 0.4s; }
-.delay-5 { transition-delay: 0.5s; }
+.delay-1 { transition-delay: 70ms; }
+.delay-2 { transition-delay: 140ms; }
+.delay-3 { transition-delay: 210ms; }
+.delay-4 { transition-delay: 280ms; }
+.delay-5 { transition-delay: 350ms; }
 
 /* ---------- Page Header (for sub-pages) ---------- */
 .page-header {
