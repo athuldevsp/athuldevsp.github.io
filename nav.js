@@ -75,4 +75,58 @@ document.addEventListener('DOMContentLoaded', () => {
             a.classList.remove('active');
         }
     });
+
+    /* --- Work experience switcher --- */
+    const experienceSwitcher = document.querySelector('[data-experience-tabs]');
+    if (experienceSwitcher) {
+        const tabs = Array.from(experienceSwitcher.querySelectorAll('[role="tab"]'));
+        const panels = Array.from(experienceSwitcher.querySelectorAll('[data-experience-panel]'));
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const selectExperience = (selectedTab, moveFocus = false, scrollTab = true) => {
+            tabs.forEach(tab => {
+                const isSelected = tab === selectedTab;
+                tab.classList.toggle('is-active', isSelected);
+                tab.setAttribute('aria-selected', String(isSelected));
+                tab.setAttribute('aria-expanded', String(isSelected));
+                tab.tabIndex = isSelected ? 0 : -1;
+            });
+
+            panels.forEach(panel => {
+                const isSelected = panel.id === selectedTab.getAttribute('aria-controls');
+                panel.hidden = !isSelected;
+                panel.classList.toggle('is-active', isSelected);
+
+                if (isSelected && !prefersReducedMotion && window.gsap) {
+                    window.gsap.fromTo(
+                        panel,
+                        { autoAlpha: 0, y: 14 },
+                        { autoAlpha: 1, y: 0, duration: 0.32, ease: 'power2.out', overwrite: 'auto', clearProps: 'transform,opacity,visibility' }
+                    );
+                }
+            });
+
+            if (scrollTab) {
+                selectedTab.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest', inline: 'nearest' });
+            }
+            if (moveFocus) selectedTab.focus();
+        };
+
+        tabs.forEach((tab, index) => {
+            tab.addEventListener('click', () => selectExperience(tab));
+            tab.addEventListener('keydown', event => {
+                let nextIndex;
+                if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (index + 1) % tabs.length;
+                if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (index - 1 + tabs.length) % tabs.length;
+                if (event.key === 'Home') nextIndex = 0;
+                if (event.key === 'End') nextIndex = tabs.length - 1;
+                if (nextIndex === undefined) return;
+                event.preventDefault();
+                selectExperience(tabs[nextIndex], true);
+            });
+        });
+
+        experienceSwitcher.classList.add('experience-tabs-ready');
+        selectExperience(tabs.find(tab => tab.getAttribute('aria-selected') === 'true') || tabs[0], false, false);
+    }
 });
