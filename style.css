@@ -1,40 +1,49 @@
 /* ==========================================================================
    Athul Dev Sudhakar Ponnu — Personal Website
-   Theme: Cosmic & Natural (deep navy → warm sunset, aurora accents)
+   Visual system: detector geometry, analysis-paper typography, track colours
    ========================================================================== */
 
 /* ---------- CSS Custom Properties ---------- */
 :root {
-    /* Core Palette */
-    --bg-deep: #0a0e1a;
-    --bg-primary: #0f1629;
-    --bg-secondary: rgba(18, 25, 50, 0.7);
-    --bg-card: rgba(22, 32, 65, 0.55);
-    --bg-card-hover: rgba(30, 44, 80, 0.7);
+    /* Identity palette */
+    --ink: #0e1116;
+    --ink-raised: #151a21;
+    --ink-soft: #1c222b;
+    --paper: #f3efe6;
+    --paper-muted: #c8c2b7;
+    --paper-dim: #908b83;
+    --track-amber: #e8a33d;
+    --track-cyan: #3fd1c9;
+    --track-crimson: #e63b5c;
+    --signal-violet: #7b6cf6;
 
-    /* Accent Colors */
-    --accent-aurora: #64ffda;
-    --accent-sunset: #ff6b6b;
-    --accent-warm: #ffa94d;
-    --accent-sky: #74b9ff;
-    --accent-violet: #a29bfe;
-    --accent-gradient: linear-gradient(135deg, #64ffda 0%, #74b9ff 50%, #a29bfe 100%);
-    --accent-sunset-gradient: linear-gradient(135deg, #ff6b6b 0%, #ffa94d 100%);
+    /* Semantic surfaces */
+    --bg-deep: var(--ink);
+    --bg-primary: var(--ink-raised);
+    --bg-secondary: rgba(243, 239, 230, 0.035);
+    --bg-card: rgba(243, 239, 230, 0.045);
+    --bg-card-hover: rgba(243, 239, 230, 0.075);
+    --text-primary: var(--paper);
+    --text-secondary: var(--paper-muted);
+    --text-muted: var(--paper-dim);
+    --text-accent: var(--track-crimson);
+    --border-color: rgba(243, 239, 230, 0.14);
+    --border-strong: rgba(243, 239, 230, 0.28);
+    --card-shadow: 0 18px 50px rgba(0, 0, 0, 0.24);
 
-    /* Text */
-    --text-primary: #e8eaf6;
-    --text-secondary: rgba(232, 234, 246, 0.7);
-    --text-muted: rgba(232, 234, 246, 0.45);
-    --text-accent: #64ffda;
-
-    /* Borders & Shadows */
-    --border-color: rgba(100, 255, 218, 0.08);
-    --border-glow: rgba(100, 255, 218, 0.2);
-    --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    --glow-shadow: 0 0 40px rgba(100, 255, 218, 0.1);
+    /* Renderer aliases: protected JS emits these variable names. */
+    --accent-aurora: var(--track-cyan);
+    --accent-warm: var(--track-amber);
+    --accent-sky: var(--track-crimson);
+    --accent-sunset: var(--track-crimson);
+    --accent-violet: var(--signal-violet);
+    --accent-gradient: linear-gradient(90deg, var(--paper), var(--track-crimson));
+    --accent-sunset-gradient: linear-gradient(90deg, var(--track-crimson), var(--track-amber));
+    --border-glow: rgba(63, 209, 201, 0.24);
+    --glow-shadow: none;
 
     /* Typography */
-    --font-heading: 'Space Grotesk', sans-serif;
+    --font-heading: 'Fraunces', Georgia, serif;
     --font-body: 'Inter', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 
