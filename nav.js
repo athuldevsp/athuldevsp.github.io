@@ -6,15 +6,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggle = document.getElementById('nav-toggle');
     const links = document.getElementById('nav-links');
     if (toggle && links) {
+        const closeMenu = () => {
+            toggle.classList.remove('active');
+            links.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        };
+
         toggle.addEventListener('click', () => {
             toggle.classList.toggle('active');
             links.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', String(links.classList.contains('open')));
         });
         links.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                toggle.classList.remove('active');
-                links.classList.remove('open');
-            });
+            link.addEventListener('click', closeMenu);
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && links.classList.contains('open')) {
+                closeMenu();
+                toggle.focus();
+            }
         });
     }
 
@@ -31,20 +41,28 @@ document.addEventListener('DOMContentLoaded', () => {
     /* --- Scroll Reveal --- */
     const revealEls = document.querySelectorAll('.reveal-up');
     if (revealEls.length) {
-        // Fallback: reveal after 1.5s in case observer doesn't trigger (e.g. headless or page load position)
-        const fallbackTimeout = setTimeout(() => {
-            revealEls.forEach(el => el.classList.add('revealed'));
-        }, 1500);
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
+        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+            revealEls.forEach(el => el.classList.add('revealed'));
+        } else {
+            let remaining = revealEls.length;
+            const fallbackTimeout = window.setTimeout(() => {
+                revealEls.forEach(el => el.classList.add('revealed'));
+            }, 2000);
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
                     entry.target.classList.add('revealed');
                     observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-        revealEls.forEach(el => observer.observe(el));
+                    remaining -= 1;
+                    if (remaining === 0) window.clearTimeout(fallbackTimeout);
+                });
+            }, { threshold: 0.14, rootMargin: '0px 0px -24px 0px' });
+
+            revealEls.forEach(el => observer.observe(el));
+        }
     }
 
     /* --- Active nav link highlight --- */
