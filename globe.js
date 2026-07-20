@@ -7,6 +7,14 @@
     const canvas = document.getElementById('globe-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    const globePalette = {
+        paper: 'rgba(232, 241, 236, 0.98)',
+        paperSolid: 'rgb(255, 253, 248)',
+        ink: 'rgb(29, 27, 23)',
+        cyan: 'rgb(0, 117, 121)',
+        amber: 'rgb(154, 97, 0)',
+        crimson: 'rgb(180, 38, 69)'
+    };
 
     // --- State ---
     let width, height;
@@ -359,11 +367,11 @@
                 // Erase borders under India
                 ctx.beginPath();
                 path(indiaSOI);
-                ctx.fillStyle = 'rgba(8, 12, 28, 1.0)'; // globe background color
+                ctx.fillStyle = globePalette.paper;
                 ctx.fill();
 
                 // Restore default land color on top of erased area
-                ctx.fillStyle = 'rgba(100, 255, 218, 0.03)';
+                ctx.fillStyle = 'rgba(0, 117, 121, 0.1)';
                 ctx.fill();
             }
 
@@ -382,8 +390,8 @@
 
         // Outer glow
         const glow = ctx.createRadialGradient(cx, cy, r * 0.85, cx, cy, r * 1.4);
-        glow.addColorStop(0, 'rgba(100, 255, 218, 0.04)');
-        glow.addColorStop(0.6, 'rgba(100, 255, 218, 0.01)');
+        glow.addColorStop(0, 'rgba(154, 97, 0, 0.08)');
+        glow.addColorStop(0.6, 'rgba(154, 97, 0, 0.02)');
         glow.addColorStop(1, 'transparent');
         ctx.beginPath();
         ctx.arc(cx, cy, r * 1.4, 0, Math.PI * 2);
@@ -393,9 +401,9 @@
         // Globe sphere
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(8, 12, 28, 0.6)';
+        ctx.fillStyle = globePalette.paper;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.15)';
+        ctx.strokeStyle = 'rgba(0, 117, 121, 0.64)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
     }
@@ -406,7 +414,7 @@
         // Draw default land first
         ctx.beginPath();
         path(worldData.land);
-        ctx.fillStyle = 'rgba(100, 255, 218, 0.03)';
+        ctx.fillStyle = 'rgba(0, 117, 121, 0.18)';
         ctx.fill();
     }
 
@@ -424,23 +432,23 @@
 
                 // Highlight selected and hovered states differently
                 if (selectedCountry && selectedCountry.id === feature.id) {
-                    ctx.fillStyle = 'rgba(255, 169, 77, 0.3)'; // Selected country (warm orange)
+                    ctx.fillStyle = 'rgba(154, 97, 0, 0.3)';
                 } else if (hoveredCountry && hoveredCountry.id === feature.id) {
-                    ctx.fillStyle = 'rgba(100, 255, 218, 0.25)'; // Hovered country (glowing green)
+                    ctx.fillStyle = 'rgba(180, 38, 69, 0.24)';
                 } else {
-                    ctx.fillStyle = 'rgba(100, 255, 218, 0.12)'; // Default visited country (soft green)
+                    ctx.fillStyle = 'rgba(0, 117, 121, 0.22)';
                 }
                 ctx.fill();
 
                 // Glow outline on hover / selection
                 if (hoveredCountry && hoveredCountry.id === feature.id) {
-                    ctx.strokeStyle = 'rgba(100, 255, 218, 0.8)';
+                    ctx.strokeStyle = globePalette.crimson;
                     ctx.lineWidth = 1.2;
                 } else if (selectedCountry && selectedCountry.id === feature.id) {
-                    ctx.strokeStyle = 'rgba(255, 169, 77, 0.8)';
+                    ctx.strokeStyle = globePalette.amber;
                     ctx.lineWidth = 1.0;
                 } else {
-                    ctx.strokeStyle = 'rgba(100, 255, 218, 0.25)';
+                    ctx.strokeStyle = 'rgba(0, 117, 121, 0.62)';
                     ctx.lineWidth = 0.6;
                 }
                 ctx.stroke();
@@ -450,12 +458,12 @@
 
     function drawBorders() {
         // Smoothly fade borders in and out based on hover state
-        const targetOpacity = isMouseOverGlobe ? 0.35 : 0.04;
+        const targetOpacity = isMouseOverGlobe ? 0.5 : 0.16;
         borderOpacity += (targetOpacity - borderOpacity) * 0.15;
 
         ctx.beginPath();
         path(worldData.borders);
-        ctx.strokeStyle = `rgba(100, 255, 218, ${borderOpacity})`;
+        ctx.strokeStyle = `rgba(29, 27, 23, ${borderOpacity})`;
         ctx.lineWidth = 0.5;
         ctx.stroke();
     }
@@ -464,7 +472,7 @@
         const graticule = d3.geoGraticule().step([20, 20])();
         ctx.beginPath();
         path(graticule);
-        ctx.strokeStyle = 'rgba(100, 255, 218, 0.02)';
+        ctx.strokeStyle = 'rgba(0, 117, 121, 0.24)';
         ctx.lineWidth = 0.4;
         ctx.stroke();
     }
@@ -473,8 +481,8 @@
         // Only show country labels on the globe as you zoom in (zoomFactor >= 1.4)
         if (zoomFactor < 1.4 || !worldData) return;
 
-        ctx.font = '10px "Space Grotesk", sans-serif';
-        ctx.fillStyle = 'rgba(232, 234, 246, 0.75)';
+        ctx.font = '10px "JetBrains Mono", monospace';
+        ctx.fillStyle = globePalette.ink;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
@@ -491,11 +499,11 @@
                     // Render label only if on the visible hemisphere
                     if (d < Math.PI / 2) {
                         const [px, py] = coords;
-                        ctx.fillStyle = 'rgba(10, 14, 26, 0.5)';
+                        ctx.fillStyle = 'rgba(255, 253, 248, 0.88)';
                         const textW = ctx.measureText(feature.properties.name).width;
                         ctx.fillRect(px - textW/2 - 4, py - 6, textW + 8, 12);
 
-                        ctx.fillStyle = 'rgba(232, 234, 246, 0.9)';
+                        ctx.fillStyle = globePalette.ink;
                         ctx.fillText(feature.properties.name, px, py);
                     }
                 }
@@ -661,9 +669,9 @@
         
         mctx.beginPath();
         mPath(countryFeature);
-        mctx.fillStyle = 'rgba(100, 255, 218, 0.08)';
+        mctx.fillStyle = 'rgba(0, 117, 121, 0.18)';
         mctx.fill();
-        mctx.strokeStyle = 'rgba(100, 255, 218, 0.4)';
+        mctx.strokeStyle = 'rgba(0, 117, 121, 0.82)';
         mctx.lineWidth = 1.5 / countryZoomTransform.k;
         mctx.stroke();
         
@@ -690,34 +698,32 @@
 
             const t = Math.log1p(place.records || 1) / logMax; // 0..1
 
-            // Color: teal (#50dcc8) → amber (#ffb84d) → coral (#ff4d4d)
-            const r = Math.round(80  + t * 175);  // 80  → 255
-            const g = Math.round(220 - t * 150);  // 220 → 70
-            const b = Math.round(200 - t * 200);  // 200 → 0
+            // Match the paper interface's cyan → amber → crimson data scale.
+            const placeColor = d3.interpolateRgbBasis(['#007579', '#9a6100', '#b42645'])(t);
 
             // Radius: 2px (rare) → 7px (home city)
             const dotR = 2 + t * 5;
 
-            // Dark outline so overlapping dots stay distinct
+            // Paper outline keeps overlapping dots distinct.
             mctx.beginPath();
             mctx.arc(px, py, dotR + 1, 0, Math.PI * 2);
-            mctx.fillStyle = 'rgba(8, 12, 28, 0.7)';
+            mctx.fillStyle = globePalette.paperSolid;
             mctx.fill();
 
             // Coloured dot
             mctx.beginPath();
             mctx.arc(px, py, dotR, 0, Math.PI * 2);
-            mctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+            mctx.fillStyle = placeColor;
             mctx.fill();
 
             // Label: top 20% by weight always visible; rest only when zoomed in
             if (t > 0.8 || countryZoomTransform.k >= 1.5) {
-                mctx.font = `${Math.round(8 + t * 4)}px "Space Grotesk", sans-serif`;
+                mctx.font = `${Math.round(8 + t * 4)}px "JetBrains Mono", monospace`;
                 mctx.textAlign = 'center';
                 mctx.textBaseline = 'top';
-                mctx.shadowColor = 'rgba(8, 12, 28, 1)';
-                mctx.shadowBlur = 4;
-                mctx.fillStyle = 'rgba(232, 234, 246, 0.9)';
+                mctx.shadowColor = globePalette.paperSolid;
+                mctx.shadowBlur = 5;
+                mctx.fillStyle = globePalette.ink;
                 mctx.fillText(place.name, px, py + dotR + 3);
                 mctx.shadowBlur = 0;
             }
@@ -940,6 +946,9 @@
         console.log("Initializing globe: sizing canvas...");
         resize();
         initCountryMapZoom();
+        // Render the paper globe scaffold immediately while geography data loads.
+        drawGlobe();
+        drawGraticule();
         console.log("Loading world map and places CSV...");
         await Promise.all([loadWorld(), loadPlaces(), loadCountryVideos()]);
         console.log("Loaded " + places.length + " places. Starting draw loop...");

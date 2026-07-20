@@ -68,10 +68,12 @@ body {
     font-family: var(--font-body);
     background-color: var(--bg-deep);
     background-image:
-        radial-gradient(circle at 20% 30%, rgba(62, 47, 28, 0.045) 0 0.6px, transparent 0.75px),
-        radial-gradient(circle at 74% 68%, rgba(62, 47, 28, 0.035) 0 0.55px, transparent 0.7px),
-        repeating-linear-gradient(to bottom, transparent 0 31px, rgba(58, 49, 37, 0.025) 31px 32px);
-    background-size: 9px 11px, 13px 15px, 100% 32px;
+        linear-gradient(rgba(0, 117, 121, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 117, 121, 0.1) 1px, transparent 1px),
+        radial-gradient(circle at 20% 30%, rgba(62, 47, 28, 0.06) 0 0.65px, transparent 0.8px);
+    background-size: 32px 32px, 32px 32px, 9px 11px;
+    background-position: -1px -1px, -1px -1px, 0 0;
+    background-attachment: fixed;
     color: var(--text-primary);
     line-height: 1.7;
     overflow-x: hidden;
@@ -192,6 +194,18 @@ img { max-width: 100%; height: auto; }
 .nav-links a:hover,
 .nav-links a.active {
     color: var(--text-primary);
+}
+
+.nav-links a.active {
+    padding-inline: 0.55rem;
+    font-weight: 700;
+    background: rgba(180, 38, 69, 0.09);
+}
+
+.page-travel .nav-links a[href="travel.html"] {
+    color: var(--paper);
+    background: var(--track-cyan);
+    text-decoration-color: transparent;
 }
 
 .nav-links a:hover::after,
@@ -976,6 +990,57 @@ img { max-width: 100%; height: auto; }
 
 .timeline-card:hover::after { right: 0; }
 
+.accordion-instruction {
+    max-width: 680px;
+    margin: -0.8rem 0 1.6rem 64px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.03em;
+}
+
+.timeline-card.is-collapsible {
+    cursor: pointer;
+    padding-right: 1.8rem;
+}
+
+.timeline-card.is-collapsible .timeline-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    padding-right: 1.5rem;
+    border-top: 1px dashed var(--border-color);
+}
+
+.timeline-card-disclosure {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    margin-top: 0.9rem;
+    color: var(--track-cyan);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.timeline-card-disclosure:focus-visible {
+    outline: 2px solid var(--track-cyan);
+    outline-offset: 4px;
+}
+
+.timeline-card-disclosure svg {
+    transition: transform 180ms var(--ease-out);
+}
+
+.timeline-card.is-open .timeline-card-disclosure svg {
+    transform: rotate(180deg);
+}
+
 .timeline-meta {
     display: flex;
     justify-content: space-between;
@@ -1174,14 +1239,14 @@ img { max-width: 100%; height: auto; }
 }
 
 .experience-tab-arrow {
-    opacity: 0;
+    opacity: 0.55;
     transform: translateX(-4px);
     transition: opacity 180ms ease, transform 180ms var(--ease-out);
 }
 
 .experience-tab.is-active .experience-tab-arrow {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(0) rotate(90deg);
 }
 
 .experience-panels {
@@ -2366,6 +2431,14 @@ img { max-width: 100%; height: auto; }
 .detail-card { border-top: 2px solid var(--track-crimson); }
 .country-video-pane { border-top: 2px solid var(--track-amber); }
 
+.globe-container {
+    background-color: rgba(255, 253, 248, 0.92);
+    background-image:
+        linear-gradient(rgba(0, 117, 121, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 117, 121, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
 .globe-controls {
     background: rgba(246, 240, 229, 0.9);
     border-color: var(--border-strong);
@@ -2509,6 +2582,7 @@ img { max-width: 100%; height: auto; }
     .timeline-card { padding: 1.35rem; }
     .timeline-label { padding-left: 42px; }
     .timeline-label::before { left: 8px; }
+    .accordion-instruction { margin-left: 42px; }
 
     .experience-tabs-ready {
         display: block;
@@ -2536,8 +2610,8 @@ img { max-width: 100%; height: auto; }
     }
 
     .experience-tab:hover { transform: none; }
-    .experience-tab-arrow { transform: rotate(90deg) translateX(-3px); }
-    .experience-tab.is-active .experience-tab-arrow { transform: rotate(90deg) translateX(0); }
+    .experience-tab-arrow { transform: translateX(-3px); }
+    .experience-tab.is-active .experience-tab-arrow { transform: translateX(0) rotate(90deg); }
     .experience-panel { min-height: 0; padding: 1.35rem; }
     .experience-panel-kicker { margin-top: 1.25rem; }
 
