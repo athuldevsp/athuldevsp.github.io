@@ -445,34 +445,32 @@ img { max-width: 100%; height: auto; }
     stroke-width: 3;
     stroke-linecap: round;
     stroke-dasharray: 0.76 0.06 0.1 0.08;
-    opacity: 0;
-    animation: detector-layer-in 900ms var(--ease-out) forwards;
+    opacity: 0.7;
     transform-origin: center;
 }
 
-.layer-tracker { stroke: var(--paper-muted); animation-delay: 120ms; }
-.layer-em { stroke: var(--track-cyan); animation-delay: 200ms; transform: rotate(18deg); }
-.layer-hadronic { stroke: var(--track-amber); animation-delay: 280ms; transform: rotate(-10deg); }
-.layer-muon { stroke: var(--track-crimson); animation-delay: 360ms; transform: rotate(7deg); }
+.layer-tracker { stroke: var(--paper-muted); --detector-delay: 120ms; }
+.layer-em { stroke: var(--track-cyan); --detector-delay: 200ms; transform: rotate(18deg); }
+.layer-hadronic { stroke: var(--track-amber); --detector-delay: 280ms; transform: rotate(-10deg); }
+.layer-muon { stroke: var(--track-crimson); --detector-delay: 360ms; transform: rotate(7deg); }
 
 .track {
     fill: none;
     stroke-width: 2;
     stroke-linecap: round;
     stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    animation: detector-track-draw 1050ms var(--ease-out) forwards;
+    stroke-dashoffset: 0;
 }
 
-.track-crimson { stroke: var(--track-crimson); animation-delay: 480ms; }
-.track-cyan { stroke: var(--track-cyan); animation-delay: 580ms; }
-.track-amber { stroke: var(--track-amber); animation-delay: 680ms; }
-.track-secondary { opacity: 0.58; animation-delay: 760ms; }
+.track-crimson { stroke: var(--track-crimson); --detector-delay: 480ms; }
+.track-cyan { stroke: var(--track-cyan); --detector-delay: 580ms; }
+.track-amber { stroke: var(--track-amber); --detector-delay: 680ms; }
+.track-secondary { opacity: 0.58; --detector-delay: 760ms; }
 
 .interaction-point {
     fill: var(--paper);
-    opacity: 0;
-    animation: interaction-point-in 280ms ease-out 420ms forwards;
+    opacity: 1;
+    --detector-delay: 420ms;
 }
 
 .detector-signature .profile-frame {
@@ -505,8 +503,29 @@ img { max-width: 100%; height: auto; }
     to { opacity: 0.7; }
 }
 
-@keyframes detector-track-draw { to { stroke-dashoffset: 0; } }
-@keyframes interaction-point-in { to { opacity: 1; } }
+@keyframes detector-track-draw {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes interaction-point-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .detector-layer {
+        animation: detector-layer-in 900ms var(--ease-out) var(--detector-delay, 0ms) both;
+    }
+
+    .track {
+        animation: detector-track-draw 1050ms var(--ease-out) var(--detector-delay, 0ms) both;
+    }
+
+    .interaction-point {
+        animation: interaction-point-in 280ms ease-out var(--detector-delay, 0ms) both;
+    }
+}
 
 /* Scroll indicator */
 .scroll-indicator {
