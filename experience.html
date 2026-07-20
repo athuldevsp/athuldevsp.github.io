@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260721_2">
+    <link rel="stylesheet" href="style.css?v=20260721_3">
 </head>
 <body class="page-experience">
 
@@ -40,66 +40,85 @@
         </div>
     </header>
 
-    <!-- Experience Timeline -->
+    <!-- Interactive Experience -->
     <section class="timeline-section">
         <div class="section-container">
             <div class="timeline-label reveal-up">
                 <span class="section-number" style="font-size:0.75rem;">01</span> Work Experience
             </div>
-            <div class="timeline">
+            <div class="experience-switcher reveal-up" data-experience-tabs>
+                <div class="experience-tablist" role="tablist" aria-label="Work experience roles">
+                    <button class="experience-tab is-active" id="experience-tab-goettingen" type="button" role="tab" aria-selected="true" aria-expanded="true" aria-controls="experience-panel-goettingen" tabindex="0">
+                        <span class="experience-tab-mark" aria-hidden="true">UG</span>
+                        <span>
+                            <strong>Göttingen</strong>
+                            <small>Lab Tutor</small>
+                        </span>
+                        <svg class="experience-tab-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                    <button class="experience-tab" id="experience-tab-iuac" type="button" role="tab" aria-selected="false" aria-expanded="false" aria-controls="experience-panel-iuac" tabindex="-1">
+                        <span class="experience-tab-mark" aria-hidden="true">IA</span>
+                        <span>
+                            <strong>IUAC</strong>
+                            <small>Project Intern</small>
+                        </span>
+                        <svg class="experience-tab-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                    <button class="experience-tab" id="experience-tab-sserd" type="button" role="tab" aria-selected="false" aria-expanded="false" aria-controls="experience-panel-sserd" tabindex="-1">
+                        <span class="experience-tab-mark" aria-hidden="true">SS</span>
+                        <span>
+                            <strong>SSERD</strong>
+                            <small>Research Intern</small>
+                        </span>
+                        <svg class="experience-tab-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                </div>
 
-                <!-- Lab Tutor -->
-                <div class="timeline-item reveal-up">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-card">
+                <div class="experience-panels" aria-live="polite">
+                    <article class="experience-panel" id="experience-panel-goettingen" role="tabpanel" aria-labelledby="experience-tab-goettingen" data-experience-panel>
                         <div class="timeline-meta">
                             <span class="timeline-date">10/2022 — 06/2023</span>
                             <span class="timeline-location">Göttingen, Germany</span>
                         </div>
-                        <h3>Physics Lab Tutor</h3>
+                        <p class="experience-panel-kicker">Teaching · Experimental Physics</p>
+                        <h2>Physics Lab Tutor</h2>
                         <p class="role">University of Göttingen</p>
                         <ul class="timeline-details">
                             <li>Instructed physics lab sessions for students from diverse academic backgrounds.</li>
                             <li>Assisted non-physics majors in grasping fundamental concepts through interactive teaching methods.</li>
                             <li>Experiments tutored: Solar cell efficiency, Capacitance measurement, Transformer Gain, Dispersive power of prism, Diffraction grating.</li>
                         </ul>
-                    </div>
-                </div>
+                    </article>
 
-                <!-- IUAC Intern -->
-                <div class="timeline-item reveal-up">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-card">
+                    <article class="experience-panel" id="experience-panel-iuac" role="tabpanel" aria-labelledby="experience-tab-iuac" data-experience-panel>
                         <div class="timeline-meta">
                             <span class="timeline-date">05/2021 — 06/2021</span>
                             <span class="timeline-location">Delhi, India</span>
                         </div>
-                        <h3>Summer Project Intern</h3>
+                        <p class="experience-panel-kicker">Research · Electron Microscopy</p>
+                        <h2>Summer Project Intern</h2>
                         <p class="role">Inter University Accelerator Center (IUAC)</p>
                         <ul class="timeline-details">
                             <li>Project: Utilizing EDX to Understand e⁻ Beam — Solid Interactions.</li>
-                            <li>Hands-on experience with an electron microscope.</li>
+                            <li>Gained hands-on experience with an electron microscope.</li>
                             <li>Analyzed Energy Dispersive X-ray spectra of different samples.</li>
                             <li>Simulated electron beam solid interaction using MC-XRAY.</li>
                         </ul>
-                    </div>
-                </div>
+                    </article>
 
-                <!-- SSERD Intern -->
-                <div class="timeline-item reveal-up">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-card">
+                    <article class="experience-panel" id="experience-panel-sserd" role="tabpanel" aria-labelledby="experience-tab-sserd" data-experience-panel>
                         <div class="timeline-meta">
                             <span class="timeline-date">07/2020 — 08/2020</span>
                             <span class="timeline-location">Bangalore, India</span>
                         </div>
-                        <h3>Research Intern</h3>
+                        <p class="experience-panel-kicker">Research · Orbital Dynamics</p>
+                        <h2>Research Intern</h2>
                         <p class="role">Society for Space Education Research and Development</p>
                         <ul class="timeline-details">
                             <li>Investigated the stability of exoplanetary systems using Hamiltonian formalism.</li>
                             <li>Simulated randomized exoplanetary systems using VPython and evaluated their stability.</li>
                         </ul>
-                    </div>
+                    </article>
                 </div>
             </div>
         </div>
@@ -120,6 +139,7 @@
         </div>
     </footer>
 
-    <script src="nav.js?v=20260721_2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+    <script src="nav.js?v=20260721_3"></script>
 </body>
 </html>

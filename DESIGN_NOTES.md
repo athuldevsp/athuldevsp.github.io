@@ -8,6 +8,7 @@ The chosen direction combines the latter two ideas: editorial analysis-note typo
 
 ## Visual decisions
 
+- The global canvas is warm paper (`#F6F0E5`) with near-black ink, subtle fiber speckle, and faint horizontal analysis-note rules. Cards use a slightly raised warm white instead of dark glass surfaces.
 - The old starfield canvas, aurora overlay, spinning portrait orbits, and five-way cosmic accent system were removed.
 - The hero portrait now sits at the detector interaction point. Four finite track paths draw through tracker, calorimeter, and muon-system arcs, then stop. There is no continuous decorative animation.
 - Track Cyan, Track Amber, and Track Crimson are assigned by surface instead of mixed into rainbow gradients. Signal Violet appears only on the dark-matter thesis marker.
@@ -19,7 +20,7 @@ The chosen direction combines the latter two ideas: editorial analysis-note typo
 
 - The hero detector sequence is the one signature motion moment. The existing `IntersectionObserver` reveal system remains responsible for restrained scroll entry.
 - `prefers-reduced-motion` renders the detector and page content immediately in their settled state.
-- Keyboard focus uses a high-contrast paper/crimson ring. Mobile navigation reports `aria-expanded`, closes with Escape, and globe/video controls retain at least 44px targets.
+- Keyboard focus uses a high-contrast ink/crimson ring. Mobile navigation reports `aria-expanded`, closes with Escape, and globe/video controls retain at least 44px targets.
 
 ## Protected integrations
 
