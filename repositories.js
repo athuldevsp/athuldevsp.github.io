@@ -15,10 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchedEl = document.getElementById('gitlab-last-fetch');
     if (fetchedEl && window.gitlabFetchedAt) {
         const fetchedAt = new Date(window.gitlabFetchedAt);
-        fetchedEl.textContent = `Last fetched: ${new Intl.DateTimeFormat(undefined, {
+        fetchedEl.innerHTML = `GitLab data last fetched: <time datetime="${window.gitlabFetchedAt}">${new Intl.DateTimeFormat(undefined, {
             dateStyle: 'medium',
             timeStyle: 'short'
-        }).format(fetchedAt)}`;
+        }).format(fetchedAt)}</time>`;
     }
 
     // Render projects list

@@ -3,6 +3,13 @@
    ============================================================ */
 
 const AUTHOR_ID = '2389285019'; // Athul Dev's Semantic Scholar Author ID
+let allPublications = [];
+let publicationSort = 'date';
+
+const MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+];
 
 // ---- Fetch live citation updates from Semantic Scholar author papers ----
 async function fetchSemanticScholarUpdates(localPubs) {
@@ -68,15 +75,101 @@ function computeStats(pubs) {
     return { totalCitations, hIndex: h, i10 };
 }
 
+function getPublicationMonth(pub) {
+    if (Number(pub.month) >= 1 && Number(pub.month) <= 12) return Number(pub.month);
+
+    const namedMonth = String(pub.month || pub.venue || '').match(
+        /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/i
+    );
+    if (namedMonth) {
+        return MONTH_NAMES.findIndex(month => month.toLowerCase() === namedMonth[1].toLowerCase()) + 1;
+    }
+
+    const arxivMonth = String(pub.arxivId || '').match(/^\d{2}(0[1-9]|1[0-2])/);
+    if (arxivMonth) return Number(arxivMonth[1]);
+
+    // JHEP stores its publication month directly after the year, e.g. 2026 (4).
+    const journalMonth = String(pub.venue || '').match(/(?:JHEP|Journal of High Energy Physics)\s+\d{4}\s*\((1[0-2]|[1-9])\)/i);
+    return journalMonth ? Number(journalMonth[1]) : 0;
+}
+
+function getPublicationJournal(pub) {
+    const venue = String(pub.venue || '').trim();
+    if (!venue) return 'Unspecified';
+    if (/JHEP|Journal of High Energy Physics/i.test(venue)) return 'Journal of High Energy Physics';
+    if (/Physical Review Letters/i.test(venue)) return 'Physical Review Letters';
+    if (/Physical Review D/i.test(venue)) return 'Physical Review D';
+    if (/Physical Review C/i.test(venue)) return 'Physical Review C';
+    if (/Physics Letters(?:\. Section)? B/i.test(venue)) return 'Physics Letters B';
+    if (/European Physical Journal.*C/i.test(venue)) return 'European Physical Journal C';
+    if (/arXiv/i.test(venue)) return 'arXiv';
+    if (/^ATLAS-/i.test(venue)) return 'ATLAS public note';
+    if (/European Physical Society Conference/i.test(venue)) return 'EPS Conference';
+    if (/Gottingen U\./i.test(venue)) return 'University of Göttingen';
+    return venue.replace(/\s+(?:19|20)\d{2}.*$/, '').replace(/,?\s+\d+(?:\s*\(\d+\))?.*$/, '').trim() || venue;
+}
+
+function populatePublicationFilters(pubs) {
+    const yearSelect = document.getElementById('publication-filter-year');
+    const monthSelect = document.getElementById('publication-filter-month');
+    const journalSelect = document.getElementById('publication-filter-journal');
+    if (!yearSelect || !monthSelect || !journalSelect) return;
+
+    const currentYear = yearSelect.value;
+    const currentMonth = monthSelect.value;
+    const currentJournal = journalSelect.value;
+    const years = [...new Set(pubs.map(pub => Number(pub.year)).filter(Boolean))].sort((a, b) => b - a);
+    const months = [...new Set(pubs.map(getPublicationMonth).filter(Boolean))].sort((a, b) => a - b);
+    const journals = [...new Set(pubs.map(getPublicationJournal))].sort((a, b) => a.localeCompare(b));
+
+    yearSelect.replaceChildren(new Option('All years', ''));
+    years.forEach(year => yearSelect.add(new Option(String(year), String(year))));
+    monthSelect.replaceChildren(new Option('All months', ''));
+    months.forEach(month => monthSelect.add(new Option(MONTH_NAMES[month - 1], String(month))));
+    journalSelect.replaceChildren(new Option('All journals', ''));
+    journals.forEach(journal => journalSelect.add(new Option(journal, journal)));
+
+    if ([...yearSelect.options].some(option => option.value === currentYear)) yearSelect.value = currentYear;
+    if ([...monthSelect.options].some(option => option.value === currentMonth)) monthSelect.value = currentMonth;
+    if ([...journalSelect.options].some(option => option.value === currentJournal)) journalSelect.value = currentJournal;
+}
+
 // ---- Render ----
-function renderPublications(pubs) {
+function renderPublications() {
     const list = document.getElementById('pub-list');
     if (!list) return;
 
-    const sorted = [...pubs].sort((a, b) => {
-        if (b.year !== a.year) return b.year - a.year;
-        return (b.citations || 0) - (a.citations || 0);
-    });
+    const year = document.getElementById('publication-filter-year')?.value || '';
+    const month = document.getElementById('publication-filter-month')?.value || '';
+    const journal = document.getElementById('publication-filter-journal')?.value || '';
+    const minimumCitations = Number(document.getElementById('publication-filter-citations')?.value || 0);
+
+    const sorted = allPublications
+        .filter(pub => !year || String(pub.year) === year)
+        .filter(pub => !month || String(getPublicationMonth(pub)) === month)
+        .filter(pub => !journal || getPublicationJournal(pub) === journal)
+        .filter(pub => Number(pub.citations || 0) >= minimumCitations)
+        .sort((a, b) => {
+            if (publicationSort === 'citations') {
+                return (b.citations || 0) - (a.citations || 0)
+                    || (b.year || 0) - (a.year || 0)
+                    || getPublicationMonth(b) - getPublicationMonth(a);
+            }
+            return (b.year || 0) - (a.year || 0)
+                || getPublicationMonth(b) - getPublicationMonth(a)
+                || (b.citations || 0) - (a.citations || 0);
+        });
+
+    const resultCount = document.getElementById('publication-results-count');
+    if (resultCount) {
+        const orderLabel = publicationSort === 'citations' ? 'most cited first' : 'newest first';
+        resultCount.textContent = `Showing ${sorted.length} of ${allPublications.length} publications · ${orderLabel}`;
+    }
+
+    if (!sorted.length) {
+        list.innerHTML = '<div class="publication-empty">No publications match these filters.</div>';
+        return;
+    }
 
     list.innerHTML = sorted.map((pub, idx) => {
         const typeLabel = pub.type === 'thesis' ? 'Thesis' :
@@ -112,6 +205,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!list) return;
 
+    document.querySelectorAll('[data-publication-sort]').forEach(button => {
+        button.addEventListener('click', () => {
+            publicationSort = button.dataset.publicationSort;
+            document.querySelectorAll('[data-publication-sort]').forEach(sortButton => {
+                const isActive = sortButton === button;
+                sortButton.classList.toggle('is-active', isActive);
+                sortButton.setAttribute('aria-pressed', String(isActive));
+            });
+            renderPublications();
+        });
+    });
+
+    [
+        'publication-filter-year',
+        'publication-filter-month',
+        'publication-filter-journal',
+        'publication-filter-citations'
+    ].forEach(id => document.getElementById(id)?.addEventListener('change', renderPublications));
+
+    document.getElementById('publication-reset')?.addEventListener('click', () => {
+        ['publication-filter-year', 'publication-filter-month', 'publication-filter-journal']
+            .forEach(id => { document.getElementById(id).value = ''; });
+        document.getElementById('publication-filter-citations').value = '0';
+        renderPublications();
+    });
+
     // Show loading state
     list.innerHTML = '<div style="text-align:center; color: var(--text-muted); padding: 2rem; font-family: var(--font-mono); font-size: 0.85rem;">Loading publications…</div>';
 
@@ -121,6 +240,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!response.ok) throw new Error('Failed to load data/publications.json');
         let pubs = await response.json();
         setPublicationFetchTime('local Google Scholar dataset');
+        allPublications = pubs;
+        populatePublicationFilters(pubs);
 
         // Render initially with local counts
         const initialStats = computeStats(pubs);
@@ -128,11 +249,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (statCitations) statCitations.textContent = initialStats.totalCitations;
         if (statHindex) statHindex.textContent = initialStats.hIndex;
         if (statI10) statI10.textContent = initialStats.i10;
-        renderPublications(pubs);
+        renderPublications();
 
         // Try to update with live Semantic Scholar citations
         const liveResult = await fetchSemanticScholarUpdates(pubs);
         pubs = liveResult.publications;
+        allPublications = pubs;
         if (liveResult.liveFetched) setPublicationFetchTime('Semantic Scholar');
         
         // Render again with updated counts
@@ -140,7 +262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (statCitations) statCitations.textContent = finalStats.totalCitations;
         if (statHindex) statHindex.textContent = finalStats.hIndex;
         if (statI10) statI10.textContent = finalStats.i10;
-        renderPublications(pubs);
+        renderPublications();
 
     } catch (err) {
         console.error(err);

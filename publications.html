@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=20260721_5">
+    <link rel="stylesheet" href="style.css?v=20260721_6">
 </head>
 <body class="page-publications">
 
@@ -60,7 +60,48 @@
                 </div>
             </div>
 
-
+            <div class="publication-tools reveal-up delay-1" aria-label="Publication sorting and filters">
+                <div class="publication-tools-header">
+                    <div class="publication-sort" role="group" aria-label="Order publications by">
+                        <span class="publication-control-label">Order by</span>
+                        <button class="publication-sort-button is-active" type="button" data-publication-sort="date" aria-pressed="true">Date</button>
+                        <button class="publication-sort-button" type="button" data-publication-sort="citations" aria-pressed="false">Citations</button>
+                    </div>
+                    <button class="publication-reset" id="publication-reset" type="button">Clear filters</button>
+                </div>
+                <div class="publication-filters">
+                    <label>
+                        <span>Year</span>
+                        <select id="publication-filter-year">
+                            <option value="">All years</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Month</span>
+                        <select id="publication-filter-month">
+                            <option value="">All months</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Journal</span>
+                        <select id="publication-filter-journal">
+                            <option value="">All journals</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Citations</span>
+                        <select id="publication-filter-citations">
+                            <option value="0">Any number</option>
+                            <option value="1">1 or more</option>
+                            <option value="5">5 or more</option>
+                            <option value="10">10 or more</option>
+                            <option value="25">25 or more</option>
+                            <option value="50">50 or more</option>
+                        </select>
+                    </label>
+                </div>
+                <p class="publication-results-count" id="publication-results-count" role="status" aria-live="polite"></p>
+            </div>
 
             <!-- Publication List -->
             <div class="pub-list reveal-up delay-2" id="pub-list">
@@ -85,6 +126,6 @@
     </footer>
 
     <script src="nav.js?v=20260721_5"></script>
-    <script src="publications.js?v=20260721_1"></script>
+    <script src="publications.js?v=20260721_2"></script>
 </body>
 </html>
