@@ -2245,3 +2245,125 @@ img { max-width: 100%; height: auto; }
     .track { stroke-dashoffset: 0; }
     .interaction-point { opacity: 1; }
 }
+
+/* ---------- Responsive refinements ---------- */
+@media (max-width: 900px) {
+    .detector-signature {
+        width: min(72vw, 460px);
+        margin-inline: auto;
+    }
+
+    .detector-signature .profile-frame {
+        width: clamp(150px, 27vw, 196px);
+        height: clamp(150px, 27vw, 196px);
+    }
+
+    .detector-caption { right: 1%; bottom: 5%; }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --nav-height: 64px;
+    }
+
+    .main-nav { padding-inline: 1rem; }
+
+    .nav-links {
+        width: min(86vw, 320px);
+        background: rgba(14, 17, 22, 0.98);
+        border-left-color: var(--border-strong);
+    }
+
+    .nav-links a {
+        display: flex;
+        min-height: 44px;
+        align-items: center;
+        font-family: var(--font-mono);
+        font-size: 0.76rem;
+    }
+
+    .hero {
+        min-height: auto;
+        padding-top: calc(var(--nav-height) + 2.25rem);
+        padding-bottom: 5rem;
+    }
+
+    .hero-content { gap: 1.25rem; }
+    .hero-name { font-size: clamp(2.5rem, 13vw, 4rem); }
+    .hero-tagline { font-size: 0.86rem; }
+    .hero-description { font-size: 0.94rem; line-height: 1.72; }
+
+    .detector-signature { width: min(92vw, 420px); }
+    .detector-signature .profile-frame {
+        width: clamp(142px, 38vw, 182px);
+        height: clamp(142px, 38vw, 182px);
+    }
+    .detector-caption { font-size: 0.52rem; }
+
+    .hero-badges,
+    .hero-cta { justify-content: flex-start; }
+    .hero-text { text-align: left; }
+    .hero-cta { display: grid; grid-template-columns: 1fr 1fr; }
+    .btn { justify-content: center; padding-inline: 0.9rem; min-height: 44px; }
+    .scroll-indicator { display: none; }
+
+    .about-section,
+    .quicklinks-section { padding: 4.5rem 0; }
+    .section-title { align-items: baseline; gap: 0.65rem; }
+    .section-title::after { display: none; }
+    .page-header { padding-top: calc(var(--nav-height) + 3rem); }
+
+    .timeline-item { padding-left: 42px; margin-bottom: 1.5rem; }
+    .timeline::before { left: 12px; }
+    .timeline-dot { left: 6px; }
+    .timeline-card { padding: 1.35rem; }
+    .timeline-label { padding-left: 42px; }
+    .timeline-label::before { left: 8px; }
+
+    .pub-stats { display: grid; grid-template-columns: 1fr 1fr; }
+    .pub-stat + .pub-stat { border-left: 1px solid var(--border-color); }
+    .pub-stat:nth-child(3) { border-left: 0; }
+    .pub-stat:nth-child(n + 3) { border-top: 1px solid var(--border-color); }
+
+    .travel-stats-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        padding: 0;
+    }
+    .stat-item { padding: 1rem 0.75rem; }
+    .stat-item + .stat-item { border-left: 1px solid var(--border-color); }
+    .stat-item:nth-child(3) { border-left: 0; }
+    .stat-item:nth-child(n + 3) { border-top: 1px solid var(--border-color); }
+    .stat-item:not(:last-child) { padding-bottom: 1rem; }
+
+    .globe-controls {
+        position: static;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        margin: 0.75rem;
+    }
+
+    .activity-card { padding: 1rem; }
+    .repo-meta { flex-wrap: wrap; gap: 0.65rem; }
+    .repo-meta > span:last-child { width: 100%; margin-left: 0 !important; }
+
+    .page-academic::before,
+    .page-repositories::before {
+        width: 120vw;
+        right: -70vw;
+    }
+}
+
+@media (max-width: 420px) {
+    .section-container { padding-inline: 1rem; }
+    .hero { padding-inline: 1rem; }
+    .hero-cta { grid-template-columns: 1fr; }
+    .hero-name { font-size: clamp(2.35rem, 14vw, 3.2rem); }
+    .badge { width: 100%; }
+    .detector-caption { display: none; }
+    .timeline-meta { display: grid; }
+    .pub-card,
+    .repo-card { padding: 1.15rem; }
+    .globe-controls { grid-template-columns: 1fr; }
+}
