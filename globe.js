@@ -727,22 +727,26 @@
             );
         const mPath = d3.geoPath(mProjection, mctx);
 
-        // Draw country shape (zoomed context)
+        const zoom = countryZoomTransform.k;
+
+        // Keep every thematic layer in the same geographic transform. This
+        // makes the heat regions part of the map instead of a screen overlay.
         mctx.save();
         mctx.translate(countryZoomTransform.x, countryZoomTransform.y);
-        mctx.scale(countryZoomTransform.k, countryZoomTransform.k);
-        
+        mctx.scale(zoom, zoom);
+
         mctx.beginPath();
         mPath(countryFeature);
         mctx.fillStyle = 'rgba(0, 117, 121, 0.18)';
         mctx.fill();
-        mctx.strokeStyle = 'rgba(0, 117, 121, 0.82)';
-        mctx.lineWidth = 1.5 / countryZoomTransform.k;
-        mctx.stroke();
-        
-        mctx.restore();
 
-        if (!countryPlaces.length) return;
+        if (!countryPlaces.length) {
+            mctx.strokeStyle = 'rgba(0, 117, 121, 0.82)';
+            mctx.lineWidth = 1.5 / zoom;
+            mctx.stroke();
+            mctx.restore();
+            return;
+        }
 
         // Normalise weights on a log scale so the heavy hitters don't dwarf everything
         const maxRecords = Math.max(...countryPlaces.map(p => p.records || 1));
@@ -760,11 +764,13 @@
             const placeColor = d3.interpolateRgbBasis(['#007579', '#9a6100', '#b42645'])(t);
             return {
                 ...place,
+                mapX: x,
+                mapY: y,
                 px,
                 py,
                 t,
                 placeColor,
-                heatRadius: 9 + t * 19
+                heatRadius: 7 + t * 14
             };
         }).filter(Boolean);
 
@@ -773,8 +779,12 @@
             return `rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${alpha})`;
         };
 
-        // Flat, discrete heat bands. Lower-frequency regions are drawn first
-        // so overlapping high-frequency regions remain legible.
+        // Clip the heat and exact markers to the country silhouette. Flat,
+        // discrete bands keep the visual vector-like without fake gradients.
+        mctx.save();
+        mctx.beginPath();
+        mPath(countryFeature);
+        mctx.clip();
         mctx.globalCompositeOperation = 'source-over';
         [...projectedPlaces]
             .sort((a, b) => (a.records || 1) - (b.records || 1))
@@ -785,36 +795,57 @@
                     { radius: place.heatRadius * 0.36, alpha: 0.28 }
                 ].forEach(band => {
                     mctx.beginPath();
-                    mctx.arc(place.px, place.py, band.radius, 0, Math.PI * 2);
+                    mctx.arc(place.mapX, place.mapY, band.radius, 0, Math.PI * 2);
                     mctx.fillStyle = rgba(place.placeColor, band.alpha);
                     mctx.fill();
                 });
             });
 
-        // A small, consistent dot marks the exact geographic coordinate.
-        projectedPlaces.forEach(place => {
-            mctx.beginPath();
-            mctx.arc(place.px, place.py, 3.2, 0, Math.PI * 2);
-            mctx.fillStyle = globePalette.paperSolid;
-            mctx.fill();
+        // Exact coordinates are detail, so reveal them only after zooming in.
+        // Dividing by zoom keeps their screen size stable while their position
+        // remains attached to the projected map.
+        const detailZoom = 1.4;
+        if (zoom >= detailZoom) {
+            projectedPlaces.forEach(place => {
+                mctx.beginPath();
+                mctx.arc(place.mapX, place.mapY, 3.2 / zoom, 0, Math.PI * 2);
+                mctx.fillStyle = globePalette.paperSolid;
+                mctx.fill();
 
-            mctx.beginPath();
-            mctx.arc(place.px, place.py, 1.8, 0, Math.PI * 2);
-            mctx.fillStyle = globePalette.ink;
-            mctx.fill();
-        });
+                mctx.beginPath();
+                mctx.arc(place.mapX, place.mapY, 1.8 / zoom, 0, Math.PI * 2);
+                mctx.fillStyle = globePalette.ink;
+                mctx.fill();
+            });
+        }
+        mctx.restore();
 
-        // Reveal labels by visit rank as the user zooms in.
-        const zoom = countryZoomTransform.k;
-        const labelLimit = zoom < 0.55 ? 3
-            : zoom < 1 ? 5
-                : zoom < 1.75 ? 8
-                    : zoom < 2.75 ? 14
-                        : zoom < 4 ? 24
+        // Redraw the border above the clipped heat for a crisp silhouette.
+        mctx.beginPath();
+        mPath(countryFeature);
+        mctx.strokeStyle = 'rgba(0, 117, 121, 0.88)';
+        mctx.lineWidth = 1.5 / zoom;
+        mctx.stroke();
+        mctx.restore();
+
+        // Keep the overview clean. Labels are progressively disclosed by
+        // visit rank, then collision-filtered as more map space becomes useful.
+        const labelLimit = zoom < detailZoom ? 0
+            : zoom < 2 ? 3
+                : zoom < 3 ? 6
+                    : zoom < 4.5 ? 10
+                        : zoom < 7 ? 16
                             : projectedPlaces.length;
+        const seenNames = new Set();
         const labelCandidates = [...projectedPlaces]
             .filter(place => place.name && !/^unknown place$/i.test(place.name))
             .sort((a, b) => (b.records || 1) - (a.records || 1))
+            .filter(place => {
+                const key = place.name.trim().toLocaleLowerCase();
+                if (seenNames.has(key)) return false;
+                seenNames.add(key);
+                return true;
+            })
             .slice(0, labelLimit);
         const occupiedLabels = [];
 
@@ -829,9 +860,9 @@
             const fontSize = rank < 3 ? 10 : 9;
             mctx.font = `${fontSize}px "JetBrains Mono", monospace`;
             const textWidth = mctx.measureText(place.name).width;
-            const boxWidth = textWidth + 8;
-            const boxHeight = fontSize + 6;
-            const offset = place.heatRadius * 0.36 + 5;
+            const boxWidth = textWidth + 5;
+            const boxHeight = fontSize + 4;
+            const offset = 7;
             const positions = [
                 { x: place.px - boxWidth / 2, y: place.py + offset },
                 { x: place.px - boxWidth / 2, y: place.py - offset - boxHeight },
@@ -846,20 +877,17 @@
                 && !overlapsLabel({ ...candidate, width: boxWidth, height: boxHeight })
             );
 
-            // Always retain the top three labels, even in dense clusters.
-            const resolved = box || (rank < 3 ? positions[0] : null);
-            if (!resolved) return;
-            const rect = { ...resolved, width: boxWidth, height: boxHeight };
+            if (!box) return;
+            const rect = { ...box, width: boxWidth, height: boxHeight };
             occupiedLabels.push(rect);
 
-            mctx.fillStyle = 'rgba(255, 253, 248, 0.9)';
-            mctx.fillRect(rect.x, rect.y, rect.width, rect.height);
-            mctx.strokeStyle = 'rgba(29, 27, 23, 0.16)';
-            mctx.lineWidth = 1;
-            mctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-            mctx.fillStyle = globePalette.ink;
             mctx.textAlign = 'center';
             mctx.textBaseline = 'middle';
+            mctx.lineJoin = 'round';
+            mctx.lineWidth = 3;
+            mctx.strokeStyle = 'rgba(255, 253, 248, 0.94)';
+            mctx.strokeText(place.name, rect.x + rect.width / 2, rect.y + rect.height / 2 + 0.5);
+            mctx.fillStyle = globePalette.ink;
             mctx.fillText(place.name, rect.x + rect.width / 2, rect.y + rect.height / 2 + 0.5);
         });
     }
