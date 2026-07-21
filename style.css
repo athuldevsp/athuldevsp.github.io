@@ -91,9 +91,18 @@ body.has-grid-distortion {
 .grid-distortion-canvas {
     position: fixed;
     inset: 0;
-    z-index: -1;
+    z-index: 0;
     display: block;
     pointer-events: none;
+}
+
+body > nav,
+body > header,
+body > main,
+body > section,
+body > footer {
+    position: relative;
+    z-index: 1;
 }
 
 @media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {

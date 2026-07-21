@@ -18,8 +18,8 @@
     if (!ctx) return;
 
     const gridSize = 32;
-    const influenceRadius = 145;
-    const displacement = 34;
+    const influenceRadius = 120;
+    const displacement = 14;
     const sampleStep = 8;
     const pointer = {
         x: window.innerWidth / 2,
@@ -31,37 +31,56 @@
     let height = 0;
     let frameRequested = false;
     let resizeRequested = false;
+    const linePoints = [];
 
-    function warpPoint(x, y) {
-        if (pointer.strength < 0.001) return [x, y];
+    function appendWarpedPoint(points, x, y) {
+        if (pointer.strength < 0.001) {
+            points.push(x, y);
+            return;
+        }
 
         const dx = x - pointer.x;
         const dy = y - pointer.y;
         const distance = Math.hypot(dx, dy);
-        if (distance >= influenceRadius || distance < 0.001) return [x, y];
+        if (distance >= influenceRadius || distance < 0.001) {
+            points.push(x, y);
+            return;
+        }
 
         const normalized = 1 - distance / influenceRadius;
-        const offset = displacement * normalized * normalized * pointer.strength;
-        return [
+        const offset = displacement * normalized * normalized * normalized * pointer.strength;
+        points.push(
             x + (dx / distance) * offset,
             y + (dy / distance) * offset
-        ];
+        );
+    }
+
+    function traceSmoothLine(points) {
+        if (points.length < 4) return;
+
+        ctx.moveTo(points[0], points[1]);
+        for (let i = 2; i < points.length - 2; i += 2) {
+            const midpointX = (points[i] + points[i + 2]) / 2;
+            const midpointY = (points[i + 1] + points[i + 3]) / 2;
+            ctx.quadraticCurveTo(points[i], points[i + 1], midpointX, midpointY);
+        }
+        ctx.lineTo(points[points.length - 2], points[points.length - 1]);
     }
 
     function traceVerticalLine(x) {
+        linePoints.length = 0;
         for (let y = -sampleStep; y <= height + sampleStep; y += sampleStep) {
-            const point = warpPoint(x, y);
-            if (y === -sampleStep) ctx.moveTo(point[0], point[1]);
-            else ctx.lineTo(point[0], point[1]);
+            appendWarpedPoint(linePoints, x, y);
         }
+        traceSmoothLine(linePoints);
     }
 
     function traceHorizontalLine(y) {
+        linePoints.length = 0;
         for (let x = -sampleStep; x <= width + sampleStep; x += sampleStep) {
-            const point = warpPoint(x, y);
-            if (x === -sampleStep) ctx.moveTo(point[0], point[1]);
-            else ctx.lineTo(point[0], point[1]);
+            appendWarpedPoint(linePoints, x, y);
         }
+        traceSmoothLine(linePoints);
     }
 
     function draw() {
@@ -102,17 +121,17 @@
     }
 
     const xTo = gsapInstance.quickTo(pointer, 'x', {
-        duration: 0.22,
+        duration: 0.34,
         ease: 'power3.out',
         onUpdate: requestDraw
     });
     const yTo = gsapInstance.quickTo(pointer, 'y', {
-        duration: 0.22,
+        duration: 0.34,
         ease: 'power3.out',
         onUpdate: requestDraw
     });
     const strengthTo = gsapInstance.quickTo(pointer, 'strength', {
-        duration: 0.28,
+        duration: 0.45,
         ease: 'power2.out',
         onUpdate: requestDraw
     });
