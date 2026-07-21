@@ -8,7 +8,9 @@
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const globePalette = {
-        paper: 'rgba(232, 241, 236, 0.98)',
+        // A faint ocean tint keeps the sphere legible while allowing the
+        // notebook grid to remain visible through the globe.
+        paper: 'rgba(0, 117, 121, 0.045)',
         paperSolid: 'rgb(255, 253, 248)',
         ink: 'rgb(29, 27, 23)',
         cyan: 'rgb(0, 117, 121)',
@@ -66,7 +68,7 @@
 
     // --- Sizing ---
     function resize() {
-        const rect = canvas.parentElement.getBoundingClientRect();
+        const rect = canvas.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
         width = rect.width;
         height = rect.height;
@@ -364,13 +366,21 @@
 
             // Mask out other countries' borders/lands inside India's official boundaries
             if (indiaSOI) {
-                // Erase borders under India
+                // Erase the atlas geometry under India before drawing the
+                // official boundary. This remains effective with a transparent globe.
+                ctx.beginPath();
+                path(indiaSOI);
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.fillStyle = '#000';
+                ctx.fill();
+                ctx.restore();
+
                 ctx.beginPath();
                 path(indiaSOI);
                 ctx.fillStyle = globePalette.paper;
                 ctx.fill();
 
-                // Restore default land color on top of erased area
                 ctx.fillStyle = 'rgba(0, 117, 121, 0.1)';
                 ctx.fill();
             }

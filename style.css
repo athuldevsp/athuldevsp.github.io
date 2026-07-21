@@ -2569,16 +2569,19 @@ img { max-width: 100%; height: auto; }
     backdrop-filter: none;
 }
 
-.globe-container { border-top: 2px solid var(--track-cyan); }
+.globe-container {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+}
 .detail-card { border-top: 2px solid var(--track-crimson); }
 .country-video-pane { border-top: 2px solid var(--track-amber); }
 
 .globe-container {
-    background-color: rgba(255, 253, 248, 0.92);
-    background-image:
-        linear-gradient(rgba(0, 117, 121, 0.08) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 117, 121, 0.08) 1px, transparent 1px);
-    background-size: 24px 24px;
+    background-color: transparent;
+    background-image: none;
 }
 
 .globe-controls {
@@ -2809,6 +2812,22 @@ img { max-width: 100%; height: auto; }
         display: grid;
         grid-template-columns: 1fr 1fr;
         margin: 0.75rem;
+    }
+
+    .globe-container {
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    #globe-canvas {
+        display: block;
+        height: clamp(300px, 88vw, 460px);
+    }
+
+    .globe-controls {
+        width: 100%;
+        margin: 0.75rem 0 0;
     }
 
     .activity-card { padding: 1rem; }
