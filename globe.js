@@ -772,7 +772,7 @@
         // Build one continuous density field from every visited location.
         // Nearby places merge into irregular topographic bands instead of
         // producing a separate circle around every coordinate.
-        const contourBandwidth = Math.max(7, Math.min(13, Math.min(mapWidth, mapHeight) * 0.03));
+        const contourBandwidth = Math.max(5, Math.min(10, Math.min(mapWidth, mapHeight) * 0.02));
         const contourCacheKey = [
             normalizeCountryName(countryFeature.properties.name),
             mapWidth,
@@ -792,12 +792,18 @@
                 .size([mapWidth, mapHeight])
                 .cellSize(1)
                 .bandwidth(contourBandwidth)
-                .thresholds(12)(projectedPlaces);
+                // Log-spaced levels retain short visits without flattening
+                // the frequency difference between stops and residences.
+                .thresholds(values => {
+                    const maxDensity = d3.max(values) || 1;
+                    const minDensity = Math.max(maxDensity * 0.00008, Number.EPSILON);
+                    return d3.range(12).map(index =>
+                        minDensity * Math.pow(maxDensity / minDensity, index / 11)
+                    );
+                })(projectedPlaces);
             countryContourCache = { key: contourCacheKey, contours: densityContours };
         }
         const contourPath = d3.geoPath(null, mctx);
-        const contourExtent = d3.extent(densityContours, contour => contour.value);
-        const contourSpan = (contourExtent[1] || 0) - (contourExtent[0] || 0);
 
         // Clip the density surface and exact markers to the country silhouette.
         mctx.save();
@@ -805,9 +811,9 @@
         mPath(countryFeature);
         mctx.clip();
         mctx.globalCompositeOperation = 'source-over';
-        densityContours.forEach(contour => {
-            const intensity = contourSpan
-                ? (contour.value - contourExtent[0]) / contourSpan
+        densityContours.forEach((contour, contourIndex) => {
+            const intensity = densityContours.length > 1
+                ? contourIndex / (densityContours.length - 1)
                 : 1;
             const contourColor = d3.interpolateRgbBasis(['#007579', '#76a832', '#d5a11e', '#b42645'])(intensity);
 
