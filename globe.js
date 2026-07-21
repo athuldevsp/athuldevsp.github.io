@@ -786,7 +786,9 @@
             densityContours = d3.contourDensity()
                 .x(place => place.mapX)
                 .y(place => place.mapY)
-                .weight(place => Math.log1p(place.records || 1))
+                // Preserve actual visit frequency. Log compression caused
+                // clusters of brief stops to overpower long-term locations.
+                .weight(place => Math.max(1, place.records || 1))
                 .size([mapWidth, mapHeight])
                 .cellSize(1)
                 .bandwidth(contourBandwidth)
