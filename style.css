@@ -1862,7 +1862,8 @@ img { max-width: 100%; height: auto; }
 }
 
 .travel-layout.has-selection {
-    grid-template-columns: 1.2fr 0.8fr;
+    grid-template-columns: minmax(260px, 0.68fr) minmax(0, 1.32fr);
+    gap: clamp(1.5rem, 3vw, 3rem);
 }
 
 .globe-column {
@@ -1877,23 +1878,12 @@ img { max-width: 100%; height: auto; }
 
 .detail-column {
     width: 100%;
+    min-width: 0;
     display: none;
 }
 
 .travel-layout.has-selection .detail-column {
     display: block;
-    animation: slideInUp 0.5s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 .detail-card {
@@ -1923,7 +1913,7 @@ img { max-width: 100%; height: auto; }
 
 .country-map-container {
     width: 100%;
-    height: 250px;
+    height: clamp(390px, 56vh, 560px);
     background: rgba(29, 27, 23, 0.035);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
@@ -2189,6 +2179,10 @@ img { max-width: 100%; height: auto; }
 @media (max-width: 992px) {
     .travel-layout.has-selection {
         grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    .travel-layout.has-selection .country-map-container {
+        height: clamp(320px, 62vw, 480px);
     }
     .quicklinks-grid {
         grid-template-columns: repeat(2, 1fr);

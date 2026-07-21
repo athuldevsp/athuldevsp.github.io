@@ -558,6 +558,86 @@
     }
 
     // --- Selected Country Operations ---
+    function showCountryLayout() {
+        const layout = document.querySelector('.travel-layout');
+        const globeColumn = layout && layout.querySelector('.globe-column');
+        const detailColumn = layout && layout.querySelector('.detail-column');
+        if (!layout || !globeColumn || !detailColumn) return;
+
+        if (layout.classList.contains('has-selection')) return;
+
+        const before = globeColumn.getBoundingClientRect();
+        layout.classList.add('has-selection');
+        resize();
+
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion || typeof gsap === 'undefined') return;
+
+        const after = globeColumn.getBoundingClientRect();
+        const desktopSplit = window.matchMedia('(min-width: 993px)').matches;
+        gsap.killTweensOf([globeColumn, detailColumn]);
+
+        if (desktopSplit && after.width > 0) {
+            gsap.fromTo(globeColumn, {
+                x: before.left - after.left,
+                y: before.top - after.top,
+                scale: before.width / after.width,
+                transformOrigin: 'left top'
+            }, {
+                x: 0,
+                y: 0,
+                scale: 1,
+                duration: 0.68,
+                ease: 'power3.inOut',
+                clearProps: 'transform'
+            });
+        }
+
+        gsap.fromTo(detailColumn, {
+            autoAlpha: 0,
+            x: desktopSplit ? 34 : 0,
+            y: desktopSplit ? 0 : 18
+        }, {
+            autoAlpha: 1,
+            x: 0,
+            y: 0,
+            duration: 0.52,
+            delay: desktopSplit ? 0.12 : 0,
+            ease: 'power2.out',
+            clearProps: 'opacity,visibility,transform'
+        });
+    }
+
+    function hideCountryLayout() {
+        const layout = document.querySelector('.travel-layout');
+        const globeColumn = layout && layout.querySelector('.globe-column');
+        const detailColumn = layout && layout.querySelector('.detail-column');
+        if (!layout || !globeColumn || !detailColumn || !layout.classList.contains('has-selection')) return;
+
+        const before = globeColumn.getBoundingClientRect();
+        if (typeof gsap !== 'undefined') gsap.killTweensOf([globeColumn, detailColumn]);
+        layout.classList.remove('has-selection');
+        resize();
+
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const after = globeColumn.getBoundingClientRect();
+        if (!reduceMotion && typeof gsap !== 'undefined' && window.matchMedia('(min-width: 993px)').matches) {
+            gsap.fromTo(globeColumn, {
+                x: before.left - after.left,
+                y: before.top - after.top,
+                scale: before.width / after.width,
+                transformOrigin: 'left top'
+            }, {
+                x: 0,
+                y: 0,
+                scale: 1,
+                duration: 0.58,
+                ease: 'power3.inOut',
+                clearProps: 'transform'
+            });
+        }
+    }
+
     async function selectCountry(countryFeature) {
         selectedCountry = countryFeature;
         const countryName = countryFeature.properties.name;
@@ -586,10 +666,7 @@
         }
 
         // Show detail column and adjust layout
-        const layout = document.querySelector('.travel-layout');
-        if (layout) {
-            layout.classList.add('has-selection');
-        }
+        showCountryLayout();
 
         // Load high-resolution boundaries for the detail map
         let renderFeature = countryFeature;
@@ -646,8 +723,7 @@
 
     function deselectCountry() {
         selectedCountry = null;
-        const layout = document.querySelector('.travel-layout');
-        if (layout) layout.classList.remove('has-selection');
+        hideCountryLayout();
         // Hide video pane and stop playback
         const pane = document.getElementById('country-video-pane');
         if (pane) {
