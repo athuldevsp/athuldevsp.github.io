@@ -564,10 +564,17 @@
 
         // Filter visited cities
         const countryPlaces = places.filter(p => normalizeCountryName(p.country) === normName);
+        const mostVisited = [...countryPlaces]
+            .filter(place => place.name && !/^unknown place$/i.test(place.name))
+            .sort((a, b) => (b.records || 1) - (a.records || 1))
+            .slice(0, 3)
+            .map(place => place.name);
 
         // Update UI Panel elements
         document.getElementById('selected-country-name').innerText = countryName;
-        document.getElementById('selected-country-stats').innerText = `${countryPlaces.length} ${countryPlaces.length === 1 ? 'location' : 'locations'} visited in ${countryName}.`;
+        document.getElementById('selected-country-stats').innerText =
+            `${countryPlaces.length} ${countryPlaces.length === 1 ? 'location' : 'locations'} visited in ${countryName}.`
+            + (mostVisited.length ? ` Most visited: ${mostVisited.join(', ')}.` : '');
 
         document.getElementById('country-map-container').style.display = 'block';
 
@@ -741,51 +748,120 @@
         const maxRecords = Math.max(...countryPlaces.map(p => p.records || 1));
         const logMax = Math.log1p(maxRecords);
 
-        // Draw lightest places first so heavier ones sit on top
-        const sorted = [...countryPlaces].sort((a, b) => (a.records || 1) - (b.records || 1));
-
-        mctx.globalCompositeOperation = 'source-over';
-
-        for (const place of sorted) {
+        const projectedPlaces = countryPlaces.map(place => {
             const coords = mProjection([place.lng, place.lat]);
-            if (!coords) continue;
+            if (!coords) return null;
             const [x, y] = coords;
             const px = x * countryZoomTransform.k + countryZoomTransform.x;
             const py = y * countryZoomTransform.k + countryZoomTransform.y;
-            if (px < -20 || px > mapWidth + 20 || py < -20 || py > mapHeight + 20) continue;
+            if (px < -40 || px > mapWidth + 40 || py < -40 || py > mapHeight + 40) return null;
 
             const t = Math.log1p(place.records || 1) / logMax; // 0..1
-
-            // Match the paper interface's cyan → amber → crimson data scale.
             const placeColor = d3.interpolateRgbBasis(['#007579', '#9a6100', '#b42645'])(t);
+            return {
+                ...place,
+                px,
+                py,
+                t,
+                placeColor,
+                heatRadius: 9 + t * 19
+            };
+        }).filter(Boolean);
 
-            // Radius: 2px (rare) → 7px (home city)
-            const dotR = 2 + t * 5;
+        const rgba = (color, alpha) => {
+            const parsed = d3.color(color);
+            return `rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${alpha})`;
+        };
 
-            // Paper outline keeps overlapping dots distinct.
+        // Flat, discrete heat bands. Lower-frequency regions are drawn first
+        // so overlapping high-frequency regions remain legible.
+        mctx.globalCompositeOperation = 'source-over';
+        [...projectedPlaces]
+            .sort((a, b) => (a.records || 1) - (b.records || 1))
+            .forEach(place => {
+                [
+                    { radius: place.heatRadius, alpha: 0.09 },
+                    { radius: place.heatRadius * 0.66, alpha: 0.16 },
+                    { radius: place.heatRadius * 0.36, alpha: 0.28 }
+                ].forEach(band => {
+                    mctx.beginPath();
+                    mctx.arc(place.px, place.py, band.radius, 0, Math.PI * 2);
+                    mctx.fillStyle = rgba(place.placeColor, band.alpha);
+                    mctx.fill();
+                });
+            });
+
+        // A small, consistent dot marks the exact geographic coordinate.
+        projectedPlaces.forEach(place => {
             mctx.beginPath();
-            mctx.arc(px, py, dotR + 1, 0, Math.PI * 2);
+            mctx.arc(place.px, place.py, 3.2, 0, Math.PI * 2);
             mctx.fillStyle = globePalette.paperSolid;
             mctx.fill();
 
-            // Coloured dot
             mctx.beginPath();
-            mctx.arc(px, py, dotR, 0, Math.PI * 2);
-            mctx.fillStyle = placeColor;
+            mctx.arc(place.px, place.py, 1.8, 0, Math.PI * 2);
+            mctx.fillStyle = globePalette.ink;
             mctx.fill();
+        });
 
-            // Label: top 20% by weight always visible; rest only when zoomed in
-            if (t > 0.8 || countryZoomTransform.k >= 1.5) {
-                mctx.font = `${Math.round(8 + t * 4)}px "JetBrains Mono", monospace`;
-                mctx.textAlign = 'center';
-                mctx.textBaseline = 'top';
-                mctx.shadowColor = globePalette.paperSolid;
-                mctx.shadowBlur = 5;
-                mctx.fillStyle = globePalette.ink;
-                mctx.fillText(place.name, px, py + dotR + 3);
-                mctx.shadowBlur = 0;
-            }
-        }
+        // Reveal labels by visit rank as the user zooms in.
+        const zoom = countryZoomTransform.k;
+        const labelLimit = zoom < 0.55 ? 3
+            : zoom < 1 ? 5
+                : zoom < 1.75 ? 8
+                    : zoom < 2.75 ? 14
+                        : zoom < 4 ? 24
+                            : projectedPlaces.length;
+        const labelCandidates = [...projectedPlaces]
+            .filter(place => place.name && !/^unknown place$/i.test(place.name))
+            .sort((a, b) => (b.records || 1) - (a.records || 1))
+            .slice(0, labelLimit);
+        const occupiedLabels = [];
+
+        const overlapsLabel = rect => occupiedLabels.some(existing =>
+            rect.x < existing.x + existing.width
+            && rect.x + rect.width > existing.x
+            && rect.y < existing.y + existing.height
+            && rect.y + rect.height > existing.y
+        );
+
+        labelCandidates.forEach((place, rank) => {
+            const fontSize = rank < 3 ? 10 : 9;
+            mctx.font = `${fontSize}px "JetBrains Mono", monospace`;
+            const textWidth = mctx.measureText(place.name).width;
+            const boxWidth = textWidth + 8;
+            const boxHeight = fontSize + 6;
+            const offset = place.heatRadius * 0.36 + 5;
+            const positions = [
+                { x: place.px - boxWidth / 2, y: place.py + offset },
+                { x: place.px - boxWidth / 2, y: place.py - offset - boxHeight },
+                { x: place.px + offset, y: place.py - boxHeight / 2 },
+                { x: place.px - offset - boxWidth, y: place.py - boxHeight / 2 }
+            ];
+            const box = positions.find(candidate =>
+                candidate.x >= 2
+                && candidate.x + boxWidth <= mapWidth - 2
+                && candidate.y >= 2
+                && candidate.y + boxHeight <= mapHeight - 2
+                && !overlapsLabel({ ...candidate, width: boxWidth, height: boxHeight })
+            );
+
+            // Always retain the top three labels, even in dense clusters.
+            const resolved = box || (rank < 3 ? positions[0] : null);
+            if (!resolved) return;
+            const rect = { ...resolved, width: boxWidth, height: boxHeight };
+            occupiedLabels.push(rect);
+
+            mctx.fillStyle = 'rgba(255, 253, 248, 0.9)';
+            mctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+            mctx.strokeStyle = 'rgba(29, 27, 23, 0.16)';
+            mctx.lineWidth = 1;
+            mctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+            mctx.fillStyle = globePalette.ink;
+            mctx.textAlign = 'center';
+            mctx.textBaseline = 'middle';
+            mctx.fillText(place.name, rect.x + rect.width / 2, rect.y + rect.height / 2 + 0.5);
+        });
     }
 
     // renderCountryPlacesList removed — place names shown on map canvas
