@@ -78,6 +78,26 @@ body {
     line-height: 1.7;
     overflow-x: hidden;
     min-height: 100vh;
+    isolation: isolate;
+}
+
+body.has-grid-distortion {
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(62, 47, 28, 0.06) 0 0.65px, transparent 0.8px);
+    background-size: 9px 11px;
+    background-position: 0 0;
+}
+
+.grid-distortion-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    display: block;
+    pointer-events: none;
+}
+
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+    .grid-distortion-canvas { display: none; }
 }
 
 .page-academic::before,
