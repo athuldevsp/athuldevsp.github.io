@@ -2632,14 +2632,26 @@ img { max-width: 100%; height: auto; }
     backdrop-filter: none;
 }
 
-.globe-container {
+.globe-container,
+.detail-card {
     border: 0;
     border-radius: 0;
     background: transparent;
     box-shadow: none;
     backdrop-filter: none;
 }
-.detail-card { border-top: 2px solid var(--track-crimson); }
+
+.detail-card {
+    padding: 0;
+    gap: 1rem;
+}
+
+.country-map-container {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+}
+
 .country-video-pane { border-top: 2px solid var(--track-amber); }
 
 .globe-container {
