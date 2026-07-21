@@ -769,10 +769,9 @@
             return `rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${alpha})`;
         };
 
-        // Build one continuous density field from every visited location.
-        // Nearby places merge into irregular topographic bands instead of
-        // producing a separate circle around every coordinate.
-        const contourBandwidth = Math.max(5, Math.min(10, Math.min(mapWidth, mapHeight) * 0.02));
+        // Build a compact-support density field. Every location contributes
+        // within the same bounded radius; visit frequency controls how many
+        // nested levels it reaches, not how far the hotspot can spread.
         const contourCacheKey = [
             normalizeCountryName(countryFeature.properties.name),
             mapWidth,
@@ -783,24 +782,39 @@
         if (countryContourCache?.key === contourCacheKey) {
             densityContours = countryContourCache.contours;
         } else {
-            densityContours = d3.contourDensity()
-                .x(place => place.mapX)
-                .y(place => place.mapY)
-                // Preserve actual visit frequency. Log compression caused
-                // clusters of brief stops to overpower long-term locations.
-                .weight(place => Math.max(1, place.records || 1))
-                .size([mapWidth, mapHeight])
-                .cellSize(1)
-                .bandwidth(contourBandwidth)
-                // Log-spaced levels retain short visits without flattening
-                // the frequency difference between stops and residences.
-                .thresholds(values => {
-                    const maxDensity = d3.max(values) || 1;
-                    const minDensity = Math.max(maxDensity * 0.00008, Number.EPSILON);
-                    return d3.range(12).map(index =>
-                        minDensity * Math.pow(maxDensity / minDensity, index / 11)
-                    );
-                })(projectedPlaces);
+            const fieldWidth = Math.ceil(mapWidth);
+            const fieldHeight = Math.ceil(mapHeight);
+            const densityField = new Float32Array(fieldWidth * fieldHeight);
+            const maxRecords = Math.max(...places.map(place => place.records || 1));
+            const influenceRadius = Math.max(4, Math.min(6, Math.min(mapWidth, mapHeight) * 0.02));
+            const radiusSquared = influenceRadius * influenceRadius;
+
+            projectedPlaces.forEach(place => {
+                // A sublinear rank scale gives every stop one level while
+                // preserving deep peaks for genuinely long-term locations.
+                const frequency = Math.max(1, place.records || 1) / maxRecords;
+                const peak = 1 + 11 * Math.pow(frequency, 0.6);
+                const minX = Math.max(0, Math.floor(place.mapX - influenceRadius));
+                const maxX = Math.min(fieldWidth - 1, Math.ceil(place.mapX + influenceRadius));
+                const minY = Math.max(0, Math.floor(place.mapY - influenceRadius));
+                const maxY = Math.min(fieldHeight - 1, Math.ceil(place.mapY + influenceRadius));
+
+                for (let y = minY; y <= maxY; y++) {
+                    for (let x = minX; x <= maxX; x++) {
+                        const dx = x + 0.5 - place.mapX;
+                        const dy = y + 0.5 - place.mapY;
+                        const distanceSquared = dx * dx + dy * dy;
+                        if (distanceSquared >= radiusSquared) continue;
+                        const falloff = 1 - distanceSquared / radiusSquared;
+                        densityField[y * fieldWidth + x] += peak * falloff * falloff;
+                    }
+                }
+            });
+
+            densityContours = d3.contours()
+                .size([fieldWidth, fieldHeight])
+                .smooth(true)
+                .thresholds(d3.range(0.5, 12, 1))(densityField);
             countryContourCache = { key: contourCacheKey, contours: densityContours };
         }
         const contourPath = d3.geoPath(null, mctx);
