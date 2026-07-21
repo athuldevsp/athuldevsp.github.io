@@ -883,6 +883,11 @@
                 py
             };
         }).filter(Boolean);
+        const uniqueNamedPlaceCount = new Set(
+            projectedPlaces
+                .filter(place => place.name && !/^unknown place$/i.test(place.name))
+                .map(place => place.name.trim().toLocaleLowerCase())
+        ).size;
 
         const rgba = (color, alpha) => {
             const parsed = d3.color(color);
@@ -968,7 +973,12 @@
         // Exact coordinates are detail, so reveal them only after zooming in.
         // Dividing by zoom keeps their screen size stable while their position
         // remains attached to the projected map.
-        const detailZoom = 1.4;
+        // Sparse country maps can expose their useful detail almost
+        // immediately; denser maps wait longer to avoid label collisions.
+        const detailZoom = uniqueNamedPlaceCount <= 3 ? 1.05
+            : uniqueNamedPlaceCount <= 6 ? 1.12
+                : uniqueNamedPlaceCount <= 10 ? 1.24
+                    : 1.4;
         if (zoom >= detailZoom) {
             projectedPlaces.forEach(place => {
                 mctx.beginPath();
@@ -994,8 +1004,11 @@
 
         // Keep the overview clean. Labels are progressively disclosed by
         // visit rank, then collision-filtered as more map space becomes useful.
+        const firstLabelLimit = uniqueNamedPlaceCount <= 6
+            ? uniqueNamedPlaceCount
+            : uniqueNamedPlaceCount <= 10 ? 5 : 3;
         const labelLimit = zoom < detailZoom ? 0
-            : zoom < 2 ? 3
+            : zoom < 2 ? firstLabelLimit
                 : zoom < 3 ? 6
                     : zoom < 4.5 ? 10
                         : zoom < 7 ? 16
