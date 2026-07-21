@@ -562,13 +562,14 @@
         const layout = document.querySelector('.travel-layout');
         const globeColumn = layout && layout.querySelector('.globe-column');
         const detailColumn = layout && layout.querySelector('.detail-column');
+        const globeControls = globeColumn && globeColumn.querySelector('.globe-controls');
         if (!layout || !globeColumn || !detailColumn) return Promise.resolve();
 
         if (layout.classList.contains('has-selection')) return Promise.resolve();
 
-        const before = globeColumn.getBoundingClientRect();
+        const before = canvas.getBoundingClientRect();
         layout.classList.add('has-selection');
-        const after = globeColumn.getBoundingClientRect();
+        const after = canvas.getBoundingClientRect();
         layout.classList.remove('has-selection');
 
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -579,13 +580,22 @@
         }
 
         const desktopSplit = window.matchMedia('(min-width: 993px)').matches;
-        gsap.killTweensOf([globeColumn, detailColumn]);
+        gsap.killTweensOf([canvas, globeControls, detailColumn].filter(Boolean));
 
         return new Promise(resolve => {
             const revealDetail = () => {
                 layout.classList.add('has-selection');
-                gsap.set(globeColumn, { clearProps: 'transform' });
+                gsap.set(canvas, { clearProps: 'transform' });
                 resize();
+
+                if (globeControls) {
+                    gsap.fromTo(globeControls, { autoAlpha: 0 }, {
+                        autoAlpha: 1,
+                        duration: 0.3,
+                        ease: 'power1.out',
+                        clearProps: 'opacity,visibility'
+                    });
+                }
 
                 gsap.fromTo(detailColumn, {
                     autoAlpha: 0,
@@ -607,15 +617,31 @@
                 return;
             }
 
-            gsap.fromTo(globeColumn, {
+            const beforeCenterX = before.left + before.width / 2;
+            const beforeCenterY = before.top + before.height / 2;
+            const afterCenterX = after.left + after.width / 2;
+            const afterCenterY = after.top + after.height / 2;
+            const startDiameter = Math.min(before.width, before.height);
+            const endDiameter = Math.min(after.width, after.height);
+
+            if (globeControls) {
+                gsap.to(globeControls, {
+                    autoAlpha: 0,
+                    duration: 0.18,
+                    ease: 'power1.out',
+                    overwrite: 'auto'
+                });
+            }
+
+            gsap.fromTo(canvas, {
                 x: 0,
                 y: 0,
                 scale: 1,
-                transformOrigin: 'left top'
+                transformOrigin: 'center center'
             }, {
-                x: after.left - before.left,
-                y: after.top - before.top,
-                scale: Math.min(1, after.width / before.width),
+                x: afterCenterX - beforeCenterX,
+                y: afterCenterY - beforeCenterY,
+                scale: Math.min(1, endDiameter / startDiameter),
                 duration: 0.68,
                 ease: 'power3.inOut',
                 overwrite: 'auto',
