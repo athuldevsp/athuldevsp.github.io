@@ -772,8 +772,10 @@
         // Build a compact-support density field. Every location contributes
         // within the same bounded radius; visit frequency controls how many
         // nested levels it reaches, not how far the hotspot can spread.
+        const normalizedCountryName = normalizeCountryName(countryFeature.properties.name);
+        const usesIndiaWeighting = normalizedCountryName === 'India';
         const contourCacheKey = [
-            normalizeCountryName(countryFeature.properties.name),
+            normalizedCountryName,
             mapWidth,
             mapHeight,
             ...countryPlaces.map(place => `${place.lat},${place.lng},${place.records || 1}`)
@@ -786,14 +788,17 @@
             const fieldHeight = Math.ceil(mapHeight);
             const densityField = new Float32Array(fieldWidth * fieldHeight);
             const maxRecords = Math.max(...places.map(place => place.records || 1));
+            const maxLogRecords = Math.log1p(maxRecords);
             const influenceRadius = Math.max(4, Math.min(6, Math.min(mapWidth, mapHeight) * 0.02));
             const radiusSquared = influenceRadius * influenceRadius;
 
             projectedPlaces.forEach(place => {
-                // A sublinear rank scale gives every stop one level while
-                // preserving deep peaks for genuinely long-term locations.
-                const frequency = Math.max(1, place.records || 1) / maxRecords;
-                const peak = 1 + 11 * Math.pow(frequency, 0.6);
+                const records = Math.max(1, place.records || 1);
+                // Keep India's current residence-sensitive curve. Elsewhere,
+                // logarithmic weighting restores detail for shorter visits.
+                const peak = usesIndiaWeighting
+                    ? 1 + 11 * Math.pow(records / maxRecords, 0.6)
+                    : 12 * Math.log1p(records) / maxLogRecords;
                 const minX = Math.max(0, Math.floor(place.mapX - influenceRadius));
                 const maxX = Math.min(fieldWidth - 1, Math.ceil(place.mapX + influenceRadius));
                 const minY = Math.max(0, Math.floor(place.mapY - influenceRadius));
