@@ -14,8 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const updateMark = document.createElement('span');
         const updateLabel = document.createElement('span');
         const updateTime = document.createElement('time');
-        const cacheKey = 'adsp-site-last-updated';
-        const cacheLifetime = 15 * 60 * 1000;
 
         updateItem.className = 'site-updated';
         updateItem.setAttribute('aria-label', 'Website update information');
@@ -42,37 +40,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return true;
         };
 
-        let cachedUpdate = null;
-        try {
-            cachedUpdate = JSON.parse(localStorage.getItem(cacheKey));
-            if (cachedUpdate?.timestamp) renderUpdateTime(cachedUpdate.timestamp);
-        } catch (_) {
-            cachedUpdate = null;
-        }
-
-        const cacheIsFresh = cachedUpdate?.fetchedAt
-            && Date.now() - cachedUpdate.fetchedAt < cacheLifetime;
-        if (!cacheIsFresh) {
-            fetch('https://api.github.com/repos/athuldevsp/athuldevsp.github.io/commits/main', {
-                headers: { Accept: 'application/vnd.github+json' }
+        fetch(`https://api.github.com/repos/athuldevsp/athuldevsp.github.io/commits/main?refresh=${Date.now()}`, {
+            cache: 'no-store',
+            headers: { Accept: 'application/vnd.github+json' }
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
+                return response.json();
             })
-                .then(response => {
-                    if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
-                    return response.json();
-                })
-                .then(commit => {
-                    const timestamp = commit?.commit?.committer?.date;
-                    if (!renderUpdateTime(timestamp)) throw new Error('Missing commit timestamp');
-                    try {
-                        localStorage.setItem(cacheKey, JSON.stringify({ timestamp, fetchedAt: Date.now() }));
-                    } catch (_) {
-                        // The timestamp still renders when storage is unavailable.
-                    }
-                })
-                .catch(() => {
-                    if (!cachedUpdate?.timestamp) updateTime.textContent = 'Temporarily unavailable';
-                });
-        }
+            .then(commit => {
+                const timestamp = commit?.commit?.committer?.date;
+                if (!renderUpdateTime(timestamp)) throw new Error('Missing commit timestamp');
+            })
+            .catch(() => {
+                updateTime.textContent = 'Temporarily unavailable';
+            });
     }
 
     if (toggle && links) {
