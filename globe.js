@@ -770,7 +770,7 @@
                 py,
                 t,
                 placeColor,
-                heatRadius: 7 + t * 14
+                heatRadius: 5 + t * 8
             };
         }).filter(Boolean);
 
@@ -779,8 +779,8 @@
             return `rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${alpha})`;
         };
 
-        // Clip the heat and exact markers to the country silhouette. Flat,
-        // discrete bands keep the visual vector-like without fake gradients.
+        // Clip the heat and exact markers to the country silhouette. Compact
+        // isolines read as map contours instead of soft, floating halos.
         mctx.save();
         mctx.beginPath();
         mPath(countryFeature);
@@ -790,14 +790,15 @@
             .sort((a, b) => (a.records || 1) - (b.records || 1))
             .forEach(place => {
                 [
-                    { radius: place.heatRadius, alpha: 0.09 },
-                    { radius: place.heatRadius * 0.66, alpha: 0.16 },
-                    { radius: place.heatRadius * 0.36, alpha: 0.28 }
-                ].forEach(band => {
+                    { radius: place.heatRadius, alpha: 0.48, width: 0.8 },
+                    { radius: place.heatRadius * 0.7, alpha: 0.62, width: 0.95 },
+                    { radius: place.heatRadius * 0.4, alpha: 0.8, width: 1.1 }
+                ].forEach(contour => {
                     mctx.beginPath();
-                    mctx.arc(place.mapX, place.mapY, band.radius, 0, Math.PI * 2);
-                    mctx.fillStyle = rgba(place.placeColor, band.alpha);
-                    mctx.fill();
+                    mctx.arc(place.mapX, place.mapY, contour.radius, 0, Math.PI * 2);
+                    mctx.strokeStyle = rgba(place.placeColor, contour.alpha);
+                    mctx.lineWidth = contour.width / zoom;
+                    mctx.stroke();
                 });
             });
 
