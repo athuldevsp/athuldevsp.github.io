@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Keep the public site-update label tied to the commit that deploys it.
+updated_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ') || exit 1
+printf '{\n  "updatedAt": "%s"\n}\n' "$updated_at" > site-meta.json || exit 1
+git add -- site-meta.json

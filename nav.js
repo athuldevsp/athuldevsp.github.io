@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const links = document.getElementById('nav-links');
     const footer = document.querySelector('.site-footer .footer-content');
 
-    /* --- Repository-derived site update time --- */
+    /* --- Build-generated site update time --- */
     if (footer) {
         const updateItem = document.createElement('p');
         const updateMark = document.createElement('span');
@@ -40,20 +40,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return true;
         };
 
-        fetch(`https://api.github.com/repos/athuldevsp/athuldevsp.github.io/commits/main?refresh=${Date.now()}`, {
-            cache: 'no-store',
-            headers: { Accept: 'application/vnd.github+json' }
-        })
+        fetch(`site-meta.json?refresh=${Date.now()}`, { cache: 'no-store' })
             .then(response => {
-                if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
+                if (!response.ok) throw new Error(`Metadata returned ${response.status}`);
                 return response.json();
             })
-            .then(commit => {
-                const timestamp = commit?.commit?.committer?.date;
+            .then(metadata => {
+                const timestamp = metadata?.updatedAt;
                 if (!renderUpdateTime(timestamp)) throw new Error('Missing commit timestamp');
             })
             .catch(() => {
-                updateTime.textContent = 'Temporarily unavailable';
+                updateTime.textContent = 'Update time unavailable';
             });
     }
 

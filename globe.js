@@ -562,49 +562,65 @@
         const layout = document.querySelector('.travel-layout');
         const globeColumn = layout && layout.querySelector('.globe-column');
         const detailColumn = layout && layout.querySelector('.detail-column');
-        if (!layout || !globeColumn || !detailColumn) return;
+        if (!layout || !globeColumn || !detailColumn) return Promise.resolve();
 
-        if (layout.classList.contains('has-selection')) return;
+        if (layout.classList.contains('has-selection')) return Promise.resolve();
 
         const before = globeColumn.getBoundingClientRect();
         layout.classList.add('has-selection');
-        resize();
+        const after = globeColumn.getBoundingClientRect();
+        layout.classList.remove('has-selection');
 
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduceMotion || typeof gsap === 'undefined') return;
+        if (reduceMotion || typeof gsap === 'undefined') {
+            layout.classList.add('has-selection');
+            resize();
+            return Promise.resolve();
+        }
 
-        const after = globeColumn.getBoundingClientRect();
         const desktopSplit = window.matchMedia('(min-width: 993px)').matches;
         gsap.killTweensOf([globeColumn, detailColumn]);
 
-        if (desktopSplit && after.width > 0) {
+        return new Promise(resolve => {
+            const revealDetail = () => {
+                layout.classList.add('has-selection');
+                gsap.set(globeColumn, { clearProps: 'transform' });
+                resize();
+
+                gsap.fromTo(detailColumn, {
+                    autoAlpha: 0,
+                    x: desktopSplit ? 34 : 0,
+                    y: desktopSplit ? 0 : 18
+                }, {
+                    autoAlpha: 1,
+                    x: 0,
+                    y: 0,
+                    duration: 0.45,
+                    ease: 'power2.out',
+                    clearProps: 'opacity,visibility,transform'
+                });
+                resolve();
+            };
+
+            if (!desktopSplit || before.width <= 0 || after.width <= 0) {
+                revealDetail();
+                return;
+            }
+
             gsap.fromTo(globeColumn, {
-                x: before.left - after.left,
-                y: before.top - after.top,
-                scale: before.width / after.width,
-                transformOrigin: 'left top'
-            }, {
                 x: 0,
                 y: 0,
                 scale: 1,
+                transformOrigin: 'left top'
+            }, {
+                x: after.left - before.left,
+                y: after.top - before.top,
+                scale: Math.min(1, after.width / before.width),
                 duration: 0.68,
                 ease: 'power3.inOut',
-                clearProps: 'transform'
+                overwrite: 'auto',
+                onComplete: revealDetail
             });
-        }
-
-        gsap.fromTo(detailColumn, {
-            autoAlpha: 0,
-            x: desktopSplit ? 34 : 0,
-            y: desktopSplit ? 0 : 18
-        }, {
-            autoAlpha: 1,
-            x: 0,
-            y: 0,
-            duration: 0.52,
-            delay: desktopSplit ? 0.12 : 0,
-            ease: 'power2.out',
-            clearProps: 'opacity,visibility,transform'
         });
     }
 
@@ -666,7 +682,7 @@
         }
 
         // Show detail column and adjust layout
-        showCountryLayout();
+        const layoutReady = showCountryLayout();
 
         // Load high-resolution boundaries for the detail map
         let renderFeature = countryFeature;
@@ -713,11 +729,13 @@
         // Show video pane for this country
         renderCountryVideo(normName, countryName);
 
-        // Delay slightly to let the CSS display block apply and compute layout width
-        setTimeout(() => {
+        // Render only after the globe has reached the split layout, so the map
+        // receives its final canvas dimensions on the first frame.
+        await layoutReady;
+        requestAnimationFrame(() => {
             resize();
             renderCountryMap(renderFeature, countryPlaces);
-        }, 100);
+        });
     }
     window.selectCountryTest = selectCountry;
 
