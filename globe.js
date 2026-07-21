@@ -48,6 +48,7 @@
     // Country Detail Map Zoom State
     let countryZoomTransform = d3.zoomIdentity;
     let countryZoom = null;
+    let countryContourCache = null;
     let countryVideos = {}; // country key -> { label, url }
 
     // --- Name Normalization ---
@@ -771,15 +772,27 @@
         // Build one continuous density field from every visited location.
         // Nearby places merge into irregular topographic bands instead of
         // producing a separate circle around every coordinate.
-        const contourBandwidth = Math.max(9, Math.min(16, Math.min(mapWidth, mapHeight) * 0.035));
-        const densityContours = d3.contourDensity()
-            .x(place => place.mapX)
-            .y(place => place.mapY)
-            .weight(place => Math.log1p(place.records || 1))
-            .size([mapWidth, mapHeight])
-            .cellSize(2)
-            .bandwidth(contourBandwidth)
-            .thresholds(8)(projectedPlaces);
+        const contourBandwidth = Math.max(7, Math.min(13, Math.min(mapWidth, mapHeight) * 0.03));
+        const contourCacheKey = [
+            normalizeCountryName(countryFeature.properties.name),
+            mapWidth,
+            mapHeight,
+            ...countryPlaces.map(place => `${place.lat},${place.lng},${place.records || 1}`)
+        ].join('|');
+        let densityContours;
+        if (countryContourCache?.key === contourCacheKey) {
+            densityContours = countryContourCache.contours;
+        } else {
+            densityContours = d3.contourDensity()
+                .x(place => place.mapX)
+                .y(place => place.mapY)
+                .weight(place => Math.log1p(place.records || 1))
+                .size([mapWidth, mapHeight])
+                .cellSize(1)
+                .bandwidth(contourBandwidth)
+                .thresholds(12)(projectedPlaces);
+            countryContourCache = { key: contourCacheKey, contours: densityContours };
+        }
         const contourPath = d3.geoPath(null, mctx);
         const contourExtent = d3.extent(densityContours, contour => contour.value);
         const contourSpan = (contourExtent[1] || 0) - (contourExtent[0] || 0);
