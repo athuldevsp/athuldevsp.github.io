@@ -585,6 +585,7 @@
         return new Promise(resolve => {
             const revealDetail = () => {
                 layout.classList.add('has-selection');
+                layout.classList.remove('is-transitioning');
                 gsap.set(canvas, { clearProps: 'transform' });
                 resize();
 
@@ -623,6 +624,8 @@
             const afterCenterY = after.top + after.height / 2;
             const startDiameter = Math.min(before.width, before.height);
             const endDiameter = Math.min(after.width, after.height);
+
+            layout.classList.add('is-transitioning');
 
             if (globeControls) {
                 gsap.to(globeControls, {

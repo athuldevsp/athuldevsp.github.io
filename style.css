@@ -1876,6 +1876,10 @@ img { max-width: 100%; height: auto; }
     max-width: none;
 }
 
+.travel-layout.is-transitioning .globe-container {
+    overflow: visible;
+}
+
 .detail-column {
     width: 100%;
     min-width: 0;
