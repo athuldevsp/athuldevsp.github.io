@@ -8,9 +8,9 @@
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const globePalette = {
-        // A faint ocean tint keeps the sphere legible while allowing the
-        // notebook grid to remain visible through the globe.
-        paper: 'rgba(0, 117, 121, 0.045)',
+        // Keep the sphere opaque and distinct while the surrounding canvas
+        // remains transparent over the notebook grid.
+        paper: 'rgb(232, 241, 236)',
         paperSolid: 'rgb(255, 253, 248)',
         ink: 'rgb(29, 27, 23)',
         cyan: 'rgb(0, 117, 121)',
