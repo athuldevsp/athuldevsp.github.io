@@ -978,7 +978,7 @@
         // remains attached to the projected map.
         // Sparse country maps can expose their useful detail almost
         // immediately; denser maps wait longer to avoid label collisions.
-        const detailZoom = uniqueNamedPlaceCount <= 3 ? 1.05
+        const detailZoom = uniqueNamedPlaceCount <= 4 ? 1
             : uniqueNamedPlaceCount <= 6 ? 1.12
                 : uniqueNamedPlaceCount <= 10 ? 1.24
                     : 1.4;
