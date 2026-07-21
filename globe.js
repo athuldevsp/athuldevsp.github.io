@@ -1189,21 +1189,30 @@
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    let touchTapCandidate = false;
+
     canvas.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
+        e.preventDefault();
+        if (e.touches.length >= 2) {
             isDragging = false;
+            touchTapCandidate = false;
             initialTouchDistance = getTouchDistance(e.touches);
             initialZoomFactor = zoomFactor;
         } else {
             isDragging = true;
+            touchTapCandidate = true;
             const t = e.touches[0];
+            clickStart = { x: t.clientX, y: t.clientY };
+            clickTime = Date.now();
             dragStart = { x: t.clientX, y: t.clientY };
             rotationStart = [...currentRotation];
         }
-    }, { passive: true });
+    }, { passive: false });
 
     canvas.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2 && initialTouchDistance !== null) {
+        e.preventDefault();
+        if (e.touches.length >= 2 && initialTouchDistance !== null) {
+            touchTapCandidate = false;
             const currentDist = getTouchDistance(e.touches);
             const ratio = currentDist / initialTouchDistance;
             zoomFactor = Math.max(0.4, Math.min(6.0, initialZoomFactor * ratio));
@@ -1215,20 +1224,35 @@
             const t = e.touches[0];
             const dx = t.clientX - dragStart.x;
             const dy = t.clientY - dragStart.y;
+            if (Math.hypot(t.clientX - clickStart.x, t.clientY - clickStart.y) >= 8) {
+                touchTapCandidate = false;
+            }
             const sensitivity = 0.4 / zoomFactor;
             currentRotation[0] = rotationStart[0] + dx * sensitivity;
             currentRotation[1] = Math.max(-60, Math.min(60, rotationStart[1] - dy * sensitivity));
             projection.rotate(currentRotation);
         }
-    }, { passive: true });
+    }, { passive: false });
 
     canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
         if (e.touches.length < 2) {
             initialTouchDistance = null;
         }
         if (e.touches.length === 0) {
             isDragging = false;
+            const t = e.changedTouches[0];
+            if (touchTapCandidate && t && Date.now() - clickTime < 350) {
+                handleGlobeClick(t);
+            }
+            touchTapCandidate = false;
         }
+    }, { passive: false });
+
+    canvas.addEventListener('touchcancel', () => {
+        isDragging = false;
+        initialTouchDistance = null;
+        touchTapCandidate = false;
     });
 
     canvas.style.cursor = 'grab';

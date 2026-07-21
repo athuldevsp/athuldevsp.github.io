@@ -1690,6 +1690,9 @@ img { max-width: 100%; height: auto; }
 #globe-canvas {
     width: 100%;
     height: 100%;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .globe-controls {
