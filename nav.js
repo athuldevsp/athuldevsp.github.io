@@ -2,19 +2,79 @@
    Navigation & Shared UI Logic
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-    /* --- Site freshness rail --- */
     const nav = document.getElementById('main-nav');
-    if (nav && !document.querySelector('.site-updated')) {
-        const updatedRail = document.createElement('div');
-        updatedRail.className = 'site-updated';
-        updatedRail.setAttribute('aria-label', 'Website update information');
-        updatedRail.innerHTML = '<span class="site-updated-mark" aria-hidden="true"></span><span>Site last updated</span><span aria-hidden="true">·</span><time datetime="2026-07-21">21 July 2026</time>';
-        document.body.insertBefore(updatedRail, nav);
-    }
-
     /* --- Mobile Nav Toggle --- */
     const toggle = document.getElementById('nav-toggle');
     const links = document.getElementById('nav-links');
+    const footer = document.querySelector('.site-footer .footer-content');
+
+    /* --- Repository-derived site update time --- */
+    if (footer) {
+        const updateItem = document.createElement('p');
+        const updateMark = document.createElement('span');
+        const updateLabel = document.createElement('span');
+        const updateTime = document.createElement('time');
+        const cacheKey = 'adsp-site-last-updated';
+        const cacheLifetime = 15 * 60 * 1000;
+
+        updateItem.className = 'site-updated';
+        updateItem.setAttribute('aria-label', 'Website update information');
+        updateItem.setAttribute('aria-live', 'polite');
+        updateMark.className = 'site-updated-mark';
+        updateMark.setAttribute('aria-hidden', 'true');
+        updateLabel.textContent = 'Site updated';
+        updateTime.textContent = 'Checking…';
+        updateItem.append(updateMark, updateLabel, updateTime);
+        footer.append(updateItem);
+
+        const renderUpdateTime = isoTimestamp => {
+            const date = new Date(isoTimestamp);
+            if (Number.isNaN(date.getTime())) return false;
+            updateTime.dateTime = date.toISOString();
+            updateTime.textContent = new Intl.DateTimeFormat(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            }).format(date);
+            return true;
+        };
+
+        let cachedUpdate = null;
+        try {
+            cachedUpdate = JSON.parse(localStorage.getItem(cacheKey));
+            if (cachedUpdate?.timestamp) renderUpdateTime(cachedUpdate.timestamp);
+        } catch (_) {
+            cachedUpdate = null;
+        }
+
+        const cacheIsFresh = cachedUpdate?.fetchedAt
+            && Date.now() - cachedUpdate.fetchedAt < cacheLifetime;
+        if (!cacheIsFresh) {
+            fetch('https://api.github.com/repos/athuldevsp/athuldevsp.github.io/commits/main', {
+                headers: { Accept: 'application/vnd.github+json' }
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
+                    return response.json();
+                })
+                .then(commit => {
+                    const timestamp = commit?.commit?.committer?.date;
+                    if (!renderUpdateTime(timestamp)) throw new Error('Missing commit timestamp');
+                    try {
+                        localStorage.setItem(cacheKey, JSON.stringify({ timestamp, fetchedAt: Date.now() }));
+                    } catch (_) {
+                        // The timestamp still renders when storage is unavailable.
+                    }
+                })
+                .catch(() => {
+                    if (!cachedUpdate?.timestamp) updateTime.textContent = 'Temporarily unavailable';
+                });
+        }
+    }
+
     if (toggle && links) {
         const closeMenu = () => {
             toggle.classList.remove('active');
