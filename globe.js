@@ -595,7 +595,7 @@
         let renderFeature = countryFeature;
         if (normName === 'India') {
             try {
-                const resp = await fetch('data/india-soi-fine.geojson?v=' + Date.now());
+                const resp = await fetch('data/india-soi-detail.geojson?v=' + Date.now());
                 if (resp.ok) {
                     const fineGeojson = await resp.json();
                     if (fineGeojson && fineGeojson.features && fineGeojson.features.length > 0) {

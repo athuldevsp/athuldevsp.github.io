@@ -2,6 +2,16 @@
    Navigation & Shared UI Logic
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
+    /* --- Site freshness rail --- */
+    const nav = document.getElementById('main-nav');
+    if (nav && !document.querySelector('.site-updated')) {
+        const updatedRail = document.createElement('div');
+        updatedRail.className = 'site-updated';
+        updatedRail.setAttribute('aria-label', 'Website update information');
+        updatedRail.innerHTML = '<span class="site-updated-mark" aria-hidden="true"></span><span>Site last updated</span><span aria-hidden="true">·</span><time datetime="2026-07-21">21 July 2026</time>';
+        document.body.insertBefore(updatedRail, nav);
+    }
+
     /* --- Mobile Nav Toggle --- */
     const toggle = document.getElementById('nav-toggle');
     const links = document.getElementById('nav-links');
@@ -29,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* --- Scroll: Nav background --- */
-    const nav = document.getElementById('main-nav');
     if (nav) {
         const onScroll = () => {
             nav.classList.toggle('scrolled', window.scrollY > 60);
