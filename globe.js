@@ -650,6 +650,46 @@
         setTimeout(() => resize(), 100);
     }
 
+    function getVisitedRegionFeature(countryPlaces) {
+        const validPlaces = countryPlaces.filter(place =>
+            Number.isFinite(place.lng) && Number.isFinite(place.lat)
+        );
+        if (!validPlaces.length) return null;
+
+        const longitudes = validPlaces.map(place => place.lng);
+        const latitudes = validPlaces.map(place => place.lat);
+        let minLng = Math.min(...longitudes);
+        let maxLng = Math.max(...longitudes);
+        let minLat = Math.min(...latitudes);
+        let maxLat = Math.max(...latitudes);
+
+        const lngSpan = maxLng - minLng;
+        const latSpan = maxLat - minLat;
+
+        // Keep a useful regional context around a single location or a tightly
+        // clustered group, then scale padding proportionally for wider trips.
+        const lngPadding = Math.max(0.65, lngSpan * 0.18);
+        const latPadding = Math.max(0.45, latSpan * 0.18);
+        minLng = Math.max(-179.5, minLng - lngPadding);
+        maxLng = Math.min(179.5, maxLng + lngPadding);
+        minLat = Math.max(-84, minLat - latPadding);
+        maxLat = Math.min(84, maxLat + latPadding);
+
+        return {
+            type: 'Feature',
+            properties: { focus: 'visited-region' },
+            geometry: {
+                type: 'MultiPoint',
+                coordinates: [
+                    [minLng, minLat],
+                    [maxLng, minLat],
+                    [maxLng, maxLat],
+                    [minLng, maxLat]
+                ]
+            }
+        };
+    }
+
     function renderCountryMap(countryFeature, countryPlaces) {
         const mapCanvas = document.getElementById('country-map-canvas');
         if (!mapCanvas) return;
@@ -667,9 +707,17 @@
 
         mctx.clearRect(0, 0, mapWidth, mapHeight);
 
-        // Setup country fit Mercator projection
+        // Fit the map to the visited region, while retaining the full country
+        // outline as geographic context. Fall back to the country when no
+        // valid place coordinates are available.
+        const visitedRegion = getVisitedRegionFeature(countryPlaces);
+        const focusFeature = visitedRegion || countryFeature;
+        const framePadding = Math.max(24, Math.min(mapWidth, mapHeight) * 0.1);
         const mProjection = d3.geoMercator()
-            .fitSize([mapWidth - 40, mapHeight - 40], countryFeature);
+            .fitExtent(
+                [[framePadding, framePadding], [mapWidth - framePadding, mapHeight - framePadding]],
+                focusFeature
+            );
         const mPath = d3.geoPath(mProjection, mctx);
 
         // Draw country shape (zoomed context)
