@@ -987,7 +987,9 @@
         if (!mapCanvas) return;
 
         countryZoom = d3.zoom()
-            .scaleExtent([1, 12]) // Zoom limits
+            // The visited-region view is scale 1. Allow pulling back far
+            // enough to recover the full-country context when desired.
+            .scaleExtent([0.08, 12])
             .on('zoom', (event) => {
                 countryZoomTransform = event.transform;
                 if (selectedCountry) {
