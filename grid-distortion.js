@@ -31,6 +31,7 @@
     let height = 0;
     let frameRequested = false;
     let resizeRequested = false;
+    let relaxationTween = null;
     const linePoints = [];
 
     function appendWarpedPoint(points, x, y) {
@@ -120,30 +121,31 @@
         requestAnimationFrame(resize);
     }
 
-    const xTo = gsapInstance.quickTo(pointer, 'x', {
-        duration: 0.34,
-        ease: 'power3.out',
-        onUpdate: requestDraw
-    });
-    const yTo = gsapInstance.quickTo(pointer, 'y', {
-        duration: 0.34,
-        ease: 'power3.out',
-        onUpdate: requestDraw
-    });
-    const strengthTo = gsapInstance.quickTo(pointer, 'strength', {
-        duration: 0.45,
-        ease: 'power2.out',
-        onUpdate: requestDraw
-    });
-
     window.addEventListener('pointermove', event => {
-        xTo(event.clientX);
-        yTo(event.clientY);
-        strengthTo(1);
+        if (relaxationTween) {
+            relaxationTween.kill();
+            relaxationTween = null;
+        }
+        pointer.x = event.clientX;
+        pointer.y = event.clientY;
+        pointer.strength = 1;
+        requestDraw();
     }, { passive: true });
 
-    document.documentElement.addEventListener('mouseleave', () => strengthTo(0));
-    window.addEventListener('blur', () => strengthTo(0));
+    function relaxGrid() {
+        if (relaxationTween) relaxationTween.kill();
+        relaxationTween = gsapInstance.to(pointer, {
+            strength: 0,
+            duration: 0.2,
+            ease: 'power2.out',
+            overwrite: true,
+            onUpdate: requestDraw,
+            onComplete: () => { relaxationTween = null; }
+        });
+    }
+
+    document.documentElement.addEventListener('mouseleave', relaxGrid);
+    window.addEventListener('blur', relaxGrid);
     window.addEventListener('resize', requestResize, { passive: true });
 
     document.body.prepend(canvas);
