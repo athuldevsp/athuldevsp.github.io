@@ -748,29 +748,18 @@
             return;
         }
 
-        // Normalise weights on a log scale so the heavy hitters don't dwarf everything
-        const maxRecords = Math.max(...countryPlaces.map(p => p.records || 1));
-        const logMax = Math.log1p(maxRecords);
-
         const projectedPlaces = countryPlaces.map(place => {
             const coords = mProjection([place.lng, place.lat]);
             if (!coords) return null;
             const [x, y] = coords;
             const px = x * countryZoomTransform.k + countryZoomTransform.x;
             const py = y * countryZoomTransform.k + countryZoomTransform.y;
-            if (px < -40 || px > mapWidth + 40 || py < -40 || py > mapHeight + 40) return null;
-
-            const t = Math.log1p(place.records || 1) / logMax; // 0..1
-            const placeColor = d3.interpolateRgbBasis(['#007579', '#9a6100', '#b42645'])(t);
             return {
                 ...place,
                 mapX: x,
                 mapY: y,
                 px,
-                py,
-                t,
-                placeColor,
-                heatRadius: 5 + t * 8
+                py
             };
         }).filter(Boolean);
 
@@ -779,28 +768,42 @@
             return `rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${alpha})`;
         };
 
-        // Clip the heat and exact markers to the country silhouette. Compact
-        // isolines read as map contours instead of soft, floating halos.
+        // Build one continuous density field from every visited location.
+        // Nearby places merge into irregular topographic bands instead of
+        // producing a separate circle around every coordinate.
+        const contourBandwidth = Math.max(9, Math.min(16, Math.min(mapWidth, mapHeight) * 0.035));
+        const densityContours = d3.contourDensity()
+            .x(place => place.mapX)
+            .y(place => place.mapY)
+            .weight(place => Math.log1p(place.records || 1))
+            .size([mapWidth, mapHeight])
+            .cellSize(2)
+            .bandwidth(contourBandwidth)
+            .thresholds(8)(projectedPlaces);
+        const contourPath = d3.geoPath(null, mctx);
+        const contourExtent = d3.extent(densityContours, contour => contour.value);
+        const contourSpan = (contourExtent[1] || 0) - (contourExtent[0] || 0);
+
+        // Clip the density surface and exact markers to the country silhouette.
         mctx.save();
         mctx.beginPath();
         mPath(countryFeature);
         mctx.clip();
         mctx.globalCompositeOperation = 'source-over';
-        [...projectedPlaces]
-            .sort((a, b) => (a.records || 1) - (b.records || 1))
-            .forEach(place => {
-                [
-                    { radius: place.heatRadius, alpha: 0.48, width: 0.8 },
-                    { radius: place.heatRadius * 0.7, alpha: 0.62, width: 0.95 },
-                    { radius: place.heatRadius * 0.4, alpha: 0.8, width: 1.1 }
-                ].forEach(contour => {
-                    mctx.beginPath();
-                    mctx.arc(place.mapX, place.mapY, contour.radius, 0, Math.PI * 2);
-                    mctx.strokeStyle = rgba(place.placeColor, contour.alpha);
-                    mctx.lineWidth = contour.width / zoom;
-                    mctx.stroke();
-                });
-            });
+        densityContours.forEach(contour => {
+            const intensity = contourSpan
+                ? (contour.value - contourExtent[0]) / contourSpan
+                : 1;
+            const contourColor = d3.interpolateRgbBasis(['#007579', '#76a832', '#d5a11e', '#b42645'])(intensity);
+
+            mctx.beginPath();
+            contourPath(contour);
+            mctx.fillStyle = rgba(contourColor, 0.2 + intensity * 0.18);
+            mctx.fill();
+            mctx.strokeStyle = rgba(contourColor, 0.72 + intensity * 0.2);
+            mctx.lineWidth = (0.75 + intensity * 0.35) / zoom;
+            mctx.stroke();
+        });
 
         // Exact coordinates are detail, so reveal them only after zooming in.
         // Dividing by zoom keeps their screen size stable while their position
