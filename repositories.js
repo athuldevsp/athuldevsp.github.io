@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load from window variables (pre-loaded via script tags to bypass CORS on file:// protocol)
     const projects = window.gitlabProjects || [];
     const activity = window.gitlabActivity || [];
+    const contributionCalendar = window.gitlabContributionCalendar || null;
 
     const fetchedEl = document.getElementById('gitlab-last-fetch');
     if (fetchedEl && window.gitlabFetchedAt) {
@@ -25,12 +26,22 @@ document.addEventListener('DOMContentLoaded', () => {
     renderProjects(projects);
 
     // Render activity calendar
-    buildContributionGrid(activity);
-    
-    // Recalculate grid on resize to fit perfectly without scrollbars
-    window.addEventListener('resize', () => {
-        buildContributionGrid(activity);
-    });
+    buildContributionGrid(activity, contributionCalendar);
+
+    // Recalculate from the calendar's actual width, including layout changes
+    // that do not trigger a window resize.
+    const gridContainer = activityGrid.parentElement;
+    let resizeFrame = 0;
+    const scheduleGridBuild = () => {
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => buildContributionGrid(activity, contributionCalendar));
+    };
+    if ('ResizeObserver' in window && gridContainer) {
+        const gridObserver = new ResizeObserver(scheduleGridBuild);
+        gridObserver.observe(gridContainer);
+    } else {
+        window.addEventListener('resize', scheduleGridBuild, { passive: true });
+    }
 });
 
 // ---- Render GitLab projects ----
@@ -74,70 +85,54 @@ function renderProjects(projects) {
 }
 
 // ---- Build dynamic contribution calendar grid ----
-function buildContributionGrid(events) {
+function buildContributionGrid(events, contributionCalendar = null) {
     const activityGrid = document.getElementById('activity-grid');
     const activityMonths = document.getElementById('activity-months');
     if (!activityGrid) return;
 
-    if (!events || events.length === 0) {
+    if ((!events || events.length === 0) && !contributionCalendar) {
         activityGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">No activity data found.</p>';
         return;
     }
 
-    // 1. Group events by date (YYYY-MM-DD)
-    const counts = {};
-    let minDate = new Date(); // Fallback to today
-    let hasEvents = false;
-
-    events.forEach(ev => {
-        if (ev.created_at) {
-            const dateStr = ev.created_at.substring(0, 10);
-            counts[dateStr] = (counts[dateStr] || 0) + 1;
-            
-            const d = new Date(ev.created_at);
-            if (d < minDate) {
-                minDate = d;
-                hasEvents = true;
+    // 1. Use GitLab's exact daily calendar totals, with event records only as
+    // a backwards-compatible fallback for older generated datasets.
+    const counts = contributionCalendar
+        ? { ...contributionCalendar }
+        : events.reduce((dailyCounts, ev) => {
+            if (ev.created_at) {
+                const dateStr = ev.created_at.substring(0, 10);
+                dailyCounts[dateStr] = (dailyCounts[dateStr] || 0) + 1;
             }
-        }
-    });
-
-    // Determine absolute oldest date
-    const absoluteStart = new Date(hasEvents ? minDate : new Date());
-    const startDay = absoluteStart.getUTCDay();
-    absoluteStart.setUTCDate(absoluteStart.getUTCDate() - startDay); // Sunday before minDate
-    absoluteStart.setUTCHours(0, 0, 0, 0);
+            return dailyCounts;
+        }, {});
 
     const end = new Date();
     const endDay = end.getUTCDay();
     end.setUTCDate(end.getUTCDate() + (6 - endDay)); // Saturday of current week
     end.setUTCHours(23, 59, 59, 999);
 
-    // Calculate maximum available weeks
-    const totalDiffTime = Math.abs(end - absoluteStart);
-    const totalDiffDays = Math.ceil(totalDiffTime / (1000 * 60 * 60 * 24));
-    const totalAvailableWeeks = Math.ceil(totalDiffDays / 7);
-
-    // Calculate how many weeks can fit in the container width
-    const containerWidth = activityGrid.parentElement.offsetWidth || 1100;
-    const colWidth = 13; // 10px cell + 3px gap
-    const fitWeeks = Math.floor((containerWidth - 10) / colWidth); // Subtract small offset for padding
-    
-    // Choose weeks to show (fit within width, not exceeding available data)
-    const numWeeks = Math.max(12, Math.min(fitWeeks, totalAvailableWeeks)); 
+    // GitLab's calendar endpoint returns one year. Keep all 53 calendar columns
+    // and resize their cells to consume the exact available width.
+    const containerWidth = Math.max(1, activityGrid.parentElement?.clientWidth || 1100);
+    const gap = containerWidth < 480 ? 1 : containerWidth < 760 ? 2 : 3;
+    const numWeeks = 53;
+    const cellSize = (containerWidth - gap * (numWeeks - 1)) / numWeeks;
     const daysToShow = numWeeks * 7;
 
-    // Adjust start date to only show the last numWeeks
+    // Show the most recent weeks and align the range Sunday through Saturday.
     const start = new Date(end);
     start.setUTCDate(end.getUTCDate() - (daysToShow - 1));
-    const startAdjustDay = start.getUTCDay();
-    start.setUTCDate(start.getUTCDate() - startAdjustDay); // Align to Sunday
     start.setUTCHours(0, 0, 0, 0);
 
-    // Apply grid template column counts dynamically
-    activityGrid.style.gridTemplateColumns = `repeat(${numWeeks}, 10px)`;
+    // Apply fluid tracks to both calendar rows and month labels.
+    activityGrid.style.gridTemplateColumns = `repeat(${numWeeks}, minmax(0, 1fr))`;
+    activityGrid.style.gridTemplateRows = `repeat(7, ${cellSize}px)`;
+    activityGrid.style.columnGap = `${gap}px`;
+    activityGrid.style.rowGap = `${gap}px`;
     if (activityMonths) {
-        activityMonths.style.gridTemplateColumns = `repeat(${numWeeks}, 10px)`;
+        activityMonths.style.gridTemplateColumns = `repeat(${numWeeks}, minmax(0, 1fr))`;
+        activityMonths.style.columnGap = `${gap}px`;
     }
 
     // 2. Generate month/year timeline labels
@@ -160,12 +155,13 @@ function buildContributionGrid(events) {
         }
     }
 
-    // Filter labels to prevent overlaps (minimum gap of 6 weeks)
+    // Filter labels according to the actual rendered track width.
     if (activityMonths) {
         const filteredLabels = [];
-        let lastCol = -10;
+        const minimumLabelGap = Math.max(6, Math.ceil(62 / (cellSize + gap)));
+        let lastCol = -minimumLabelGap;
         monthLabels.forEach(label => {
-            if (label.column - lastCol >= 6) {
+            if (label.column - lastCol >= minimumLabelGap) {
                 filteredLabels.push(label);
                 lastCol = label.column;
             }
@@ -173,7 +169,7 @@ function buildContributionGrid(events) {
         
         activityMonths.innerHTML = filteredLabels.map(l => {
             return `
-                <span class="activity-month-label" style="grid-row: 1; grid-column: ${l.column} / span 6;">${l.text}</span>
+                <span class="activity-month-label" style="grid-row: 1; grid-column: ${l.column} / span ${minimumLabelGap};">${l.text}</span>
                 <span class="activity-tick" style="grid-row: 2; grid-column: ${l.column};"></span>
             `;
         }).join('');
@@ -189,10 +185,10 @@ function buildContributionGrid(events) {
         const count = counts[dateStr] || 0;
         
         let level = 0;
-        if (count > 0 && count <= 2) level = 1;
-        else if (count >= 3 && count <= 5) level = 2;
-        else if (count >= 6 && count <= 9) level = 3;
-        else if (count >= 10) level = 4;
+        if (count >= 30) level = 4;
+        else if (count >= 20) level = 3;
+        else if (count >= 10) level = 2;
+        else if (count > 0) level = 1;
 
         const dateFormatted = currentDate.toLocaleDateString(undefined, { 
             timeZone: 'UTC',
