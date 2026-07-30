@@ -1883,6 +1883,14 @@ img { max-width: 100%; height: auto; }
     overflow: visible;
 }
 
+@media (min-width: 993px) {
+    .travel-layout.has-selection .globe-container {
+        height: auto;
+        min-height: 0;
+        aspect-ratio: var(--globe-container-ratio, 1);
+    }
+}
+
 .detail-column {
     width: 100%;
     min-width: 0;

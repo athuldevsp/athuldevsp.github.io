@@ -349,11 +349,11 @@
     }
 
     // --- Drawing loop ---
-    function draw(time) {
+    function renderGlobeFrame(time, advanceRotation = true) {
         ctx.clearRect(0, 0, width, height);
 
         // Auto-rotation
-        if (autoRotate && !isDragging) {
+        if (advanceRotation && autoRotate && !isDragging) {
             const dt = time - lastTime;
             currentRotation[0] += velocity * (dt / 16);
             projection.rotate(currentRotation);
@@ -390,7 +390,10 @@
         }
         drawGraticule();
         drawCountryLabels();
+    }
 
+    function draw(time) {
+        renderGlobeFrame(time);
         animFrame = requestAnimationFrame(draw);
     }
 
@@ -567,7 +570,14 @@
 
         if (layout.classList.contains('has-selection')) return Promise.resolve();
 
+        const desktopSplit = window.matchMedia('(min-width: 993px)').matches;
         const before = canvas.getBoundingClientRect();
+        if (desktopSplit && before.height > 0) {
+            layout.style.setProperty(
+                '--globe-container-ratio',
+                `${before.width} / ${before.height}`
+            );
+        }
         layout.classList.add('has-selection');
         const after = canvas.getBoundingClientRect();
         layout.classList.remove('has-selection');
@@ -576,10 +586,10 @@
         if (reduceMotion || typeof gsap === 'undefined') {
             layout.classList.add('has-selection');
             resize();
+            renderGlobeFrame(performance.now(), false);
             return Promise.resolve();
         }
 
-        const desktopSplit = window.matchMedia('(min-width: 993px)').matches;
         gsap.killTweensOf([canvas, globeControls, detailColumn].filter(Boolean));
 
         return new Promise(resolve => {
@@ -588,6 +598,7 @@
                 layout.classList.remove('is-transitioning');
                 gsap.set(canvas, { clearProps: 'transform' });
                 resize();
+                renderGlobeFrame(performance.now(), false);
 
                 if (globeControls) {
                     gsap.fromTo(globeControls, { autoAlpha: 0 }, {
@@ -662,7 +673,9 @@
         const before = globeColumn.getBoundingClientRect();
         if (typeof gsap !== 'undefined') gsap.killTweensOf([globeColumn, detailColumn]);
         layout.classList.remove('has-selection');
+        layout.style.removeProperty('--globe-container-ratio');
         resize();
+        renderGlobeFrame(performance.now(), false);
 
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const after = globeColumn.getBoundingClientRect();
