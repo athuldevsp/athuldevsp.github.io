@@ -775,7 +775,6 @@
         // receives its final canvas dimensions on the first frame.
         await layoutReady;
         requestAnimationFrame(() => {
-            resize();
             renderCountryMap(renderFeature, countryPlaces);
         });
     }
@@ -791,7 +790,6 @@
             const area = document.getElementById('video-embed-area');
             if (area) area.innerHTML = ''; // stops video playback
         }
-        setTimeout(() => resize(), 100);
     }
 
     function getVisitedRegionFeature(countryPlaces) {

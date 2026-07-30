@@ -1884,6 +1884,10 @@ img { max-width: 100%; height: auto; }
 }
 
 @media (min-width: 993px) {
+    .travel-layout.has-selection .globe-column {
+        align-self: center;
+    }
+
     .travel-layout.has-selection .globe-container {
         height: auto;
         min-height: 0;
