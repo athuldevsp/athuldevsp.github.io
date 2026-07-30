@@ -580,6 +580,7 @@
         }
         layout.classList.add('has-selection');
         const after = canvas.getBoundingClientRect();
+        const controlsAfter = globeControls?.getBoundingClientRect();
         layout.classList.remove('has-selection');
 
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -597,17 +598,13 @@
                 layout.classList.add('has-selection');
                 layout.classList.remove('is-transitioning');
                 gsap.set(canvas, { clearProps: 'transform' });
-                resize();
-                renderGlobeFrame(performance.now(), false);
-
                 if (globeControls) {
-                    gsap.fromTo(globeControls, { autoAlpha: 0 }, {
-                        autoAlpha: 1,
-                        duration: 0.3,
-                        ease: 'power1.out',
-                        clearProps: 'opacity,visibility'
+                    gsap.set(globeControls, {
+                        clearProps: 'transform,opacity,visibility'
                     });
                 }
+                resize();
+                renderGlobeFrame(performance.now(), false);
 
                 gsap.fromTo(detailColumn, {
                     autoAlpha: 0,
@@ -635,14 +632,29 @@
             const afterCenterY = after.top + after.height / 2;
             const startDiameter = Math.min(before.width, before.height);
             const endDiameter = Math.min(after.width, after.height);
+            const controlsBefore = globeControls?.getBoundingClientRect();
 
             layout.classList.add('is-transitioning');
 
-            if (globeControls) {
-                gsap.to(globeControls, {
-                    autoAlpha: 0,
-                    duration: 0.18,
-                    ease: 'power1.out',
+            if (globeControls && controlsBefore && controlsAfter) {
+                const controlsBeforeCenterX = controlsBefore.left + controlsBefore.width / 2;
+                const controlsBeforeCenterY = controlsBefore.top + controlsBefore.height / 2;
+                const controlsAfterCenterX = controlsAfter.left + controlsAfter.width / 2;
+                const controlsAfterCenterY = controlsAfter.top + controlsAfter.height / 2;
+
+                gsap.fromTo(globeControls, {
+                    x: 0,
+                    y: 0,
+                    scaleX: 1,
+                    scaleY: 1,
+                    transformOrigin: 'center center'
+                }, {
+                    x: controlsAfterCenterX - controlsBeforeCenterX,
+                    y: controlsAfterCenterY - controlsBeforeCenterY,
+                    scaleX: controlsAfter.width / controlsBefore.width,
+                    scaleY: controlsAfter.height / controlsBefore.height,
+                    duration: 0.68,
+                    ease: 'power3.inOut',
                     overwrite: 'auto'
                 });
             }
